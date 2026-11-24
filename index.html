@@ -1,0 +1,3153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OBS 歌枠セトリ＆作業ポモドーロ・時計 透過オーバーレイ＋操作ドック | peco</title>
+  <meta name="description" content="OBSに入れるだけ！歌枠セットリスト、YouTubeタイムスタンプ1クリック自動生成、作業ポモドーロ、配信時計が1つになったVTuber・配信者向け透過オーバーレイ＆操作ドック。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&family=Noto+Sans+JP:wght@400;600;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ground: #0C111C;
+      --surface: #141D2E;
+      --surface-raised: #1B273D;
+      --paper: #F6F8FB;
+      --paper-ink: #0F172A;
+      --ink: #F8FAFC;
+      --ink-sec: #CBD5E1;
+      --muted: #94A3B8;
+      --accent: #38BDF8;
+      --accent-ink: #062134;
+      --margin: clamp(16px, 3.5vw, 44px);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--ground);
+      color: var(--ink);
+      font-family: "Noto Sans JP", "Hiragino Sans", system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    a { color: inherit; }
+
+    .page-wrap {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 0 var(--margin);
+    }
+
+    /* Plain Navigation Bar */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 0;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .wordmark {
+      font-family: "Big Shoulders Display", "Noto Sans JP", sans-serif;
+      font-weight: 800;
+      font-size: 26px;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--ink-sec);
+    }
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--accent);
+      color: var(--accent-ink);
+      font-weight: 900;
+      font-size: 15px;
+      padding: 12px 22px;
+      border-radius: 0;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .cta-btn:hover {
+      background: #7DD3FC;
+      transform: translateY(-1px);
+    }
+    .cta-btn-secondary {
+      background: var(--surface-raised);
+      color: var(--ink);
+      padding: 12px 20px;
+      font-weight: 800;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    /* Hero */
+    .hero-sec {
+      padding: 28px 0 96px;
+    }
+    .hero-head {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 32px;
+      align-items: end;
+      margin-bottom: 36px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 4.1vw, 56px);
+      font-weight: 900;
+      line-height: 1.14;
+      letter-spacing: -0.02em;
+    }
+    .hero-lead-col {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: flex-start;
+    }
+    .hero-lead {
+      margin: 0;
+      font-size: 17px;
+      color: var(--ink-sec);
+    }
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Live OBS Broadcast Stage Artefact (`data-ui`) */
+    .obs-desk {
+      background: var(--surface);
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1.55fr 1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+    .obs-preview-monitor {
+      position: relative;
+      min-height: 520px;
+      background: #10192B;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px;
+    }
+    .obs-preview-monitor.bg-checker {
+      background-color: #1A2232;
+      background-image:
+        linear-gradient(45deg, #232E42 25%, transparent 25%),
+        linear-gradient(-45deg, #232E42 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #232E42 75%),
+        linear-gradient(-45deg, transparent 75%, #232E42 75%);
+      background-size: 24px 24px;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+    }
+    .obs-preview-monitor.bg-daylight {
+      background: #D8CFC4;
+    }
+    .stage-silhouette {
+      position: absolute;
+      right: 28px;
+      bottom: 0;
+      width: 220px;
+      height: 360px;
+      pointer-events: none;
+      opacity: 0.32;
+    }
+    .stage-toolbar {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .stage-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink-sec);
+      background: rgba(12, 17, 28, 0.78);
+      padding: 5px 11px;
+    }
+    .stage-bg-btns {
+      display: flex;
+      gap: 6px;
+    }
+    .stage-bg-btn {
+      border: none;
+      background: rgba(12, 17, 28, 0.78);
+      color: var(--ink-sec);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    .stage-bg-btn.is-active {
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+    .live-overlay-mount {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex: 1;
+    }
+    .live-overlay-mount.pos-right {
+      flex-direction: row-reverse;
+    }
+    .live-main-col {
+      width: min(390px, 100%);
+    }
+
+    /* Right side Live Controller inside Hero */
+    .obs-live-dock {
+      background: #0E1524;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .dock-sec-head {
+      font-size: 14px;
+      font-weight: 900;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ctrl-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .ctrl-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .ctrl-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+    .ctrl-btn {
+      border: none;
+      background: var(--surface-raised);
+      color: var(--ink);
+      padding: 9px 10px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+    }
+    .ctrl-btn:hover {
+      background: #263654;
+    }
+    .ctrl-btn.is-active {
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+    .ctrl-btn-big {
+      background: var(--accent);
+      color: var(--accent-ink);
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 900;
+      width: 100%;
+      border: none;
+      cursor: pointer;
+    }
+    .ctrl-btn-big:hover {
+      background: #7DD3FC;
+    }
+    .ts-slip {
+      background: var(--paper);
+      color: var(--paper-ink);
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      max-height: 138px;
+      overflow-y: auto;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Sections */
+    .sec-block {
+      padding: 110px 0;
+    }
+    .sec-alt {
+      background: var(--surface);
+    }
+    h2 {
+      margin: 0 0 28px;
+      font-size: clamp(26px, 3vw, 40px);
+      font-weight: 900;
+      line-height: 1.18;
+    }
+    .two-col-asymmetric {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 48px;
+      align-items: start;
+    }
+    .url-box {
+      background: var(--ground);
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+    .url-box-title {
+      font-weight: 900;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+    .url-copy-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .url-input {
+      flex: 1;
+      min-width: 220px;
+      background: var(--surface);
+      color: var(--ink);
+      border: none;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+
+    /* Menu-style Pricing Sheet */
+    .menu-sheet {
+      background: var(--paper);
+      color: var(--paper-ink);
+      padding: clamp(24px, 4vw, 48px);
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 40px;
+    }
+    .tier-col h3 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      font-weight: 900;
+    }
+    .price-tag {
+      font-family: "Big Shoulders Display", sans-serif;
+      font-size: 54px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+    .spec-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px;
+    }
+    .spec-list li {
+      padding: 9px 0;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    /* FAQ */
+    .faq-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 28px;
+    }
+    .faq-item {
+      background: var(--surface);
+      padding: 24px;
+    }
+    .faq-item h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .faq-item p {
+      margin: 0;
+      color: var(--ink-sec);
+      font-size: 15px;
+    }
+
+    .site-footer {
+      padding: 64px 0 48px;
+      background: #080C14;
+    }
+    .footer-big {
+      font-family: "Big Shoulders Display", "Noto Sans JP", sans-serif;
+      font-size: clamp(36px, 7vw, 88px);
+      font-weight: 800;
+      line-height: 0.95;
+      margin-bottom: 20px;
+    }
+
+    
+.ov-root {
+  --ov-bg-rgb: 15, 22, 36;
+  --ov-bg-alt-rgb: 23, 33, 52;
+  --ov-opacity: 0.86;
+  --ov-border: rgba(148, 163, 184, 0.28);
+  --ov-text: #F8FAFC;
+  --ov-text-sec: #CBD5E1;
+  --ov-muted: #94A3B8;
+  --ov-accent: #38BDF8;
+  --ov-accent2: #818CF8;
+  --ov-badge-text: #082F49;
+  --ov-radius: 18px;
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+  color: var(--ov-text);
+  box-sizing: border-box;
+}
+
+.ov-root *, .ov-root *::before, .ov-root *::after {
+  box-sizing: border-box;
+}
+
+.ov-card {
+  background: rgba(var(--ov-bg-rgb), var(--ov-opacity));
+  border: 1.5px solid var(--ov-border);
+  border-radius: var(--ov-radius);
+  padding: 20px 22px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.ov-root[data-pixel="1"] .ov-card {
+  border-width: 3px;
+  border-radius: 0 !important;
+  backdrop-filter: none;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.65);
+  font-family: "DotGothic16", "MS Gothic", "Osaka-Mono", "Hiragino Kaku Gothic ProN", monospace;
+}
+
+.ov-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ov-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.ov-header-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--ov-text-sec);
+}
+
+.ov-header-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ov-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-pill-accent {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--ov-accent);
+  color: var(--ov-badge-text);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 4px 11px;
+  border-radius: 999px;
+}
+
+.ov-root[data-pixel="1"] .ov-pill-accent {
+  border-radius: 0;
+}
+
+.ov-now-box {
+  background: rgba(var(--ov-bg-alt-rgb), 0.78);
+  border: 1px solid var(--ov-border);
+  border-radius: calc(var(--ov-radius) * 0.72);
+  padding: 15px 17px;
+}
+
+.ov-now-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.ov-song-num {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ov-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-now-title {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.25;
+  color: var(--ov-text);
+  word-break: break-word;
+}
+
+.ov-now-artist {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ov-accent);
+}
+
+.ov-eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.ov-eq i {
+  display: block;
+  width: 3px;
+  background: currentColor;
+  border-radius: 1px;
+  animation: ovEqBounce 0.85s ease-in-out infinite alternate;
+}
+
+.ov-eq i:nth-child(1) { height: 5px; animation-delay: 0s; }
+.ov-eq i:nth-child(2) { height: 11px; animation-delay: 0.16s; }
+.ov-eq i:nth-child(3) { height: 7px; animation-delay: 0.32s; }
+.ov-eq i:nth-child(4) { height: 12px; animation-delay: 0.11s; }
+.ov-eq i:nth-child(5) { height: 6px; animation-delay: 0.25s; }
+
+@keyframes ovEqBounce {
+  0% { transform: scaleY(0.35); }
+  100% { transform: scaleY(1); }
+}
+
+.ov-next-row {
+  margin-top: 12px;
+  padding: 9px 13px;
+  border-radius: calc(var(--ov-radius) * 0.55);
+  background: rgba(var(--ov-bg-alt-rgb), 0.5);
+  border-left: 3px solid var(--ov-accent2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ov-next-tag {
+  color: var(--ov-accent2);
+  font-weight: 900;
+  white-space: nowrap;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.ov-next-song {
+  color: var(--ov-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ov-next-song small {
+  color: var(--ov-muted);
+  font-weight: 600;
+}
+
+.ov-section-caption {
+  margin-top: 14px;
+  margin-bottom: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--ov-muted);
+}
+
+.ov-song-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.ov-song-list::-webkit-scrollbar {
+  width: 4px;
+}
+.ov-song-list::-webkit-scrollbar-thumb {
+  background: var(--ov-border);
+  border-radius: 4px;
+}
+
+.ov-song-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background 0.18s ease;
+}
+
+.ov-song-row.status-sung {
+  opacity: 0.62;
+}
+
+.ov-song-row.status-sung .ov-row-mark {
+  color: var(--ov-accent);
+}
+
+.ov-song-row.status-current {
+  background: rgba(var(--ov-bg-alt-rgb), 0.9);
+  border: 1px solid var(--ov-accent);
+}
+
+.ov-song-row.status-current .ov-row-mark {
+  color: var(--ov-accent);
+}
+
+.ov-row-mark {
+  width: 14px;
+  text-align: center;
+  font-weight: 900;
+  color: var(--ov-muted);
+}
+
+.ov-row-idx {
+  font-size: 11px;
+  color: var(--ov-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-row-main {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ov-row-artist {
+  font-size: 12px;
+  color: var(--ov-muted);
+  margin-left: 4px;
+  font-weight: 600;
+}
+
+.ov-row-ts {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ov-accent);
+  background: rgba(var(--ov-bg-rgb), 0.65);
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+
+/* Pomodoro */
+.ov-pomo-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.ov-pomo-ring-wrap {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  flex-shrink: 0;
+}
+
+.ov-pomo-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ov-ring-track {
+  fill: none;
+  stroke: var(--ov-border);
+  stroke-width: 10;
+}
+
+.ov-ring-fill {
+  fill: none;
+  stroke: var(--ov-accent);
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.35s linear;
+}
+
+.ov-root[data-pixel="1"] .ov-ring-fill {
+  stroke-linecap: butt;
+}
+
+.ov-ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ov-pomo-time {
+  font-size: 29px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+
+.ov-pomo-state {
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--ov-muted);
+}
+
+.ov-pomo-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ov-pomo-sub {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ov-text);
+}
+
+.ov-pomo-stat-line {
+  font-size: 13px;
+  color: var(--ov-text-sec);
+}
+
+.ov-todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ov-todo-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(var(--ov-bg-alt-rgb), 0.55);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ov-todo-row.is-done {
+  opacity: 0.58;
+}
+
+.ov-todo-row.is-done .ov-todo-text {
+  text-decoration: line-through;
+}
+
+.ov-todo-check {
+  color: var(--ov-accent);
+  font-weight: 900;
+}
+
+/* Clock & Tag */
+.ov-clock-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ov-clock-date {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ov-muted);
+  letter-spacing: 0.04em;
+}
+
+.ov-clock-time {
+  font-size: 42px;
+  font-weight: 900;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-clock-sec {
+  font-size: 20px;
+  color: var(--ov-accent);
+  margin-left: 3px;
+}
+
+.ov-clock-tag-pill {
+  background: var(--ov-accent);
+  color: var(--ov-badge-text);
+  font-size: 14px;
+  font-weight: 900;
+  padding: 7px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.ov-root[data-pixel="1"] .ov-clock-tag-pill {
+  border-radius: 0;
+}
+
+.ov-marquee-Viewport {
+  margin-top: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  background: rgba(var(--ov-bg-alt-rgb), 0.65);
+  border-radius: 8px;
+  padding: 7px 0;
+}
+
+.ov-marquee-track {
+  display: inline-flex;
+  gap: 48px;
+  padding-left: 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ov-text-sec);
+  animation: ovMarqueeScroll 20s linear infinite;
+}
+
+@keyframes ovMarqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ov-mini-clock {
+  padding: 12px 16px;
+  min-width: 220px;
+}
+
+.ov-mini-clock-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ov-mini-time {
+  font-size: 24px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-mini-time small {
+  font-size: 13px;
+  color: var(--ov-accent);
+}
+
+.ov-mini-tag {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ov-badge-text);
+  background: var(--ov-accent);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.ov-mini-date {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ov-muted);
+}
+
+/* Compact mode */
+.ov-card-compact {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+}
+
+.ov-card-compact .ov-now-box {
+  flex: 1;
+  padding: 10px 14px;
+}
+
+.ov-card-compact .ov-next-row {
+  margin-top: 0;
+  max-width: 280px;
+}
+
+
+    @media (max-width: 980px) {
+      .hero-head,
+      .obs-desk,
+      .two-col-asymmetric,
+      .menu-sheet,
+      .faq-grid {
+        grid-template-columns: 1fr;
+      }
+      .obs-preview-monitor {
+        min-height: 440px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrap">
+    <nav class="top-nav" aria-label="メインナビゲーション">
+      <a href="#" class="wordmark">PECO OBS STUDIO TOOLS</a>
+      <div class="nav-links">
+        <a href="#live-demo">ライブ操作デモ</a>
+        <a href="#obs-setup">30秒OBS導入</a>
+        <a href="#pricing">無料版 / Pro比較</a>
+        <a href="#faq">よくある質問</a>
+        <a href="https://pecopeko1011.booth.pm/" target="_blank" rel="noopener noreferrer" class="cta-btn">BOOTHで入手 (¥0 / ¥680)</a>
+      </div>
+    </nav>
+
+    <section class="hero-sec" id="live-demo">
+      <div class="hero-head">
+        <h1>歌枠セトリもポモドーロも、<br />OBSに貼るだけで配信完成。</h1>
+        <div class="hero-lead-col">
+          <p class="hero-lead">
+            曲送り1クリックでYouTube用タイムスタンプを自動記録。作業ポモドーロと配信時計まで1つに統合した、VTuber・配信者向け透過オーバーレイ＆操作ドックです。
+          </p>
+          <div class="hero-actions">
+            <a href="https://pecopeko1011.booth.pm/" target="_blank" rel="noopener noreferrer" class="cta-btn">BOOTHでProフルパック(¥680)・無料ローカル版を入手 ↗</a>
+            <a href="#obs-setup" class="cta-btn-secondary">今すぐOBSにURLコピペで試す</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 実物ライブ操作ステージ -->
+      <div class="obs-desk" data-ui="obs-broadcast-desk">
+        <div id="demoMonitor" class="obs-preview-monitor">
+          <div class="stage-toolbar">
+            <span class="stage-label">OBS 配信キャンバス実物プレビュー (1920×1080 透過対応)</span>
+            <div class="stage-bg-btns">
+              <button type="button" class="stage-bg-btn is-active" data-bg="night">夜配信背景</button>
+              <button type="button" class="stage-bg-btn" data-bg="checker">透過チェッカー</button>
+              <button type="button" class="stage-bg-btn" data-bg="daylight">昼カフェ背景</button>
+            </div>
+          </div>
+
+          <div id="demoOverlayRoot" class="ov-root">
+            <div id="demoOverlayMount" class="live-overlay-mount">
+              <div id="demoMainSlot" class="live-main-col"></div>
+              <div id="demoCornerSlot"></div>
+            </div>
+          </div>
+
+          <!-- VTuber立ち絵ポジション目安シルエット -->
+          <svg class="stage-silhouette" viewBox="0 0 220 360" fill="none" aria-hidden="true">
+            <circle cx="115" cy="92" r="46" fill="#38BDF8" />
+            <path d="M42 360C46 236 76 168 115 168C154 168 184 236 188 360H42Z" fill="#38BDF8" />
+          </svg>
+        </div>
+
+        <!-- 右側：ライブ操作ドック体験パネル -->
+        <div class="obs-live-dock">
+          <div class="dock-sec-head">
+            <span>🎛 ドック操作をここでそのまま体験</span>
+            <span id="demoToast" style="font-size:12px;color:#38BDF8;"></span>
+          </div>
+
+          <div class="ctrl-grid-4">
+            <button type="button" class="ctrl-btn demo-mode-btn is-active" data-mode="utawaku">歌枠</button>
+            <button type="button" class="ctrl-btn demo-mode-btn" data-mode="pomodoro">ポモドーロ</button>
+            <button type="button" class="ctrl-btn demo-mode-btn" data-mode="clock">時計</button>
+            <button type="button" class="ctrl-btn demo-mode-btn" data-mode="all_in_one">同時表示</button>
+          </div>
+
+          <button type="button" id="demoNextSongBtn" class="ctrl-btn-big">▶ 次の曲へ進む（開始時刻を自動記録）</button>
+
+          <div class="ctrl-grid-3">
+            <button type="button" id="demoPrevSongBtn" class="ctrl-btn">⏮ 前の曲</button>
+            <button type="button" id="demoPomoToggleBtn" class="ctrl-btn">⏱ ポモ開始/停止</button>
+            <button type="button" id="demoChimeBtn" class="ctrl-btn">🔔 チャイム試聴</button>
+          </div>
+
+          <div class="dock-sec-head" style="margin-top:4px;">
+            <span>🎨 Pro収録 全6テーマを着せ替え体験</span>
+          </div>
+          <div id="demoThemeBtns" class="ctrl-grid-2"></div>
+
+          <div class="dock-sec-head" style="margin-top:4px;">
+            <span>📋 YouTube概要欄タイムスタンプ自動生成 (Pro)</span>
+            <button type="button" id="demoCopyTsBtn" class="ctrl-btn" style="padding:4px 10px;font-size:12px;">コピー</button>
+          </div>
+          <div id="demoTsSlip" class="ts-slip"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 30秒OBS導入セクション -->
+  <section class="sec-block sec-alt" id="obs-setup">
+    <div class="page-wrap two-col-asymmetric">
+      <div>
+        <h2>URLを貼るだけ、30秒でOBS導入。<br />ローカル完全オフラインZIPも用意。</h2>
+        <p style="color:var(--ink-sec);margin:0 0 20px;">
+          OBS内蔵ブラウザの同一オリジン同期（BroadcastChannel ＋ localStorage）を使うため、外部サーバーへの通信やアカウント登録は一切不要。さらにダウンロードZIP版ならネット接続ゼロの「対話(Interact)」1ファイル操作にも対応しています。
+        </p>
+        <a href="https://pecopeko1011.booth.pm/" target="_blank" rel="noopener noreferrer" class="cta-btn">BOOTHでローカルZIP版 (無料Lite / Pro ¥680) をDL ↗</a>
+      </div>
+
+      <div>
+        <div class="url-box">
+          <div class="url-box-title">① OBS「ブラウザ」ソースに貼るURL（幅 1920 × 高さ 1080・無料Lite体験）</div>
+          <div class="url-copy-row">
+            <input id="urlOverlayInput" class="url-input" readonly value="https://pecopeko.github.io/obs-utawaku-pomodoro-dock/overlay.html" aria-label="OBSブラウザソースURL" />
+            <button type="button" class="cta-btn copy-url-btn" data-target="urlOverlayInput">URLをコピー</button>
+          </div>
+        </div>
+
+        <div class="url-box">
+          <div class="url-box-title">② OBS「ドック」→「カスタムブラウザドック」に貼る操作パネルURL</div>
+          <div class="url-copy-row">
+            <input id="urlDockInput" class="url-input" readonly value="https://pecopeko.github.io/obs-utawaku-pomodoro-dock/dock.html" aria-label="OBSカスタムドックURL" />
+            <button type="button" class="cta-btn copy-url-btn" data-target="urlDockInput">URLをコピー</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 価格・エディション比較 -->
+  <section class="sec-block" id="pricing">
+    <div class="page-wrap">
+      <h2>まずは¥0無料版で動作確認。<br />本気配信には¥680買い切りProパック。</h2>
+      <div class="menu-sheet">
+        <div class="tier-col">
+          <h3>Lite 無料体験版</h3>
+          <div class="price-tag">¥0</div>
+          <ul class="spec-list">
+            <li>✓ Dark Frost（すりガラス黒）テーマ収録</li>
+            <li>✓ 歌枠セットリスト最大5曲まで登録</li>
+            <li>✓ 作業ポモドーロ（定番 25分 / 5分）＆TODOリスト</li>
+            <li>✓ 配信時計・日付・ハッシュタグ・流れる告知バー</li>
+            <li>✓ OBSカスタムドック連動 ＋ オフライン対話モード両対応</li>
+          </ul>
+          <a href="https://pecopeko1011.booth.pm/" target="_blank" rel="noopener noreferrer" class="cta-btn-secondary" style="background:#0F172A;color:#F8FAFC;">BOOTHから無料版ZIPをダウンロード ↗</a>
+        </div>
+
+        <div class="tier-col">
+          <h3>Pro フルパック（買い切り）</h3>
+          <div class="price-tag">¥680</div>
+          <ul class="spec-list">
+            <li>★ デザイナーズ全6テーマ収録（Sakura / Cyber Neon / Starlight / Latte / Pixel Retro）</li>
+            <li>★ 推し色に合わせられるカスタム差し色ピッカー＆背景透過度スライダー</li>
+            <li>★ セットリスト曲数無制限 ＋「曲名 / アーティスト」1行ずつ一括貼付</li>
+            <li>★ YouTube概要欄・コメント用タイムスタンプ自動記録＆ズレ秒数一括補正</li>
+            <li>★ ポモドーロ時間自由設定（50m/10m等）・長休憩・3種シンセチャイム・JSON保存</li>
+            <li>★ 収益化・スパチャ・メンバーシップ・事務所所属VTuber商用配信フル許諾</li>
+          </ul>
+          <a href="https://pecopeko1011.booth.pm/" target="_blank" rel="noopener noreferrer" class="cta-btn" style="width:100%;">BOOTHでProフルパック(¥680)を手に入れる ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- よくある質問 -->
+  <section class="sec-block sec-alt" id="faq">
+    <div class="page-wrap">
+      <h2>導入前によくある質問</h2>
+      <div class="faq-grid">
+        <div class="faq-item">
+          <h3>WindowsでもMacでもOBS Studioで動きますか？</h3>
+          <p>はい。OBS Studio標準搭載のブラウザソースおよびカスタムブラウザドックのみで動作するため、Windows / macOS どちらでも外部プラグイン不要でそのまま動きます。</p>
+        </div>
+        <div class="faq-item">
+          <h3>セットリストや作業タスクの内容が外部に送信されませんか？</h3>
+          <p>一切送信されません。お使いのPCのOBSブラウザ内（BroadcastChannel と localStorage）だけで完結する設計のため、未公開の新曲セトリも安心して準備できます。</p>
+        </div>
+        <div class="faq-item">
+          <h3>収益化済みチャンネルや事務所所属ライバーでも使えますか？</h3>
+          <p>はい！個人勢・企業/事務所所属を問わず、スーパーチャットやメンバーシップを含む商用・収益化配信で追加費用なくご利用いただけます。</p>
+        </div>
+        <div class="faq-item">
+          <h3>歌枠の開始時刻とタイマー押下がズレた場合は直せますか？</h3>
+          <p>Pro版では「±1秒 / ±5秒 / ±10秒」のオフセット微調整ボタンを搭載しており、全曲のタイムスタンプをまとめて実際のアーカイブ秒数へピッタリ合わせられます。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="page-wrap">
+      <div class="footer-big">PECO STREAM OVERLAYS</div>
+      <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:14px;">
+        <span>Crafted by peco · OBS Studio Browser-Source &amp; Custom Dock Suite</span>
+        <a href="https://pecopeko1011.booth.pm/" target="_blank" rel="noopener noreferrer" style="color:var(--accent);font-weight:800;">pecopeko1011.booth.pm ↗</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /**
+ * OBS Utawaku Setlist, YouTube Timestamp & Pomodoro All-in-One Engine
+ * Crafted by peco (https://pecopeko1011.booth.pm/)
+ * Zero external dependencies · 100% Browser-Local (BroadcastChannel + localStorage)
+ */
+
+const PecoObsEngine = (() => {
+  const BROADCAST_CHANNEL_NAME = "peco_obs_utawaku_v1";
+  const STORAGE_KEY = "peco_obs_utawaku_state_v1";
+  const SCHEMA_VERSION = 1;
+
+  const EDITIONS = {
+    lite: {
+      id: "lite",
+      label: "Lite (¥0 無料体験版)",
+      maxSongs: 5,
+      allowedThemes: ["dark_frost"],
+      allowCustomTheme: false,
+      allowBulkPaste: false,
+      allowTimestamps: false,
+      allowCustomPomodoro: false,
+      allowJsonPresets: false,
+    },
+    pro: {
+      id: "pro",
+      label: "Pro フルパック",
+      maxSongs: 500,
+      allowedThemes: [
+        "dark_frost",
+        "sakura_macaron",
+        "cyber_neon",
+        "starlight_navy",
+        "latte_cafe",
+        "pixel_retro",
+      ],
+      allowCustomTheme: true,
+      allowBulkPaste: true,
+      allowTimestamps: true,
+      allowCustomPomodoro: true,
+      allowJsonPresets: true,
+    },
+  };
+
+  const THEMES = {
+    dark_frost: {
+      id: "dark_frost",
+      name: "Dark Frost",
+      jpName: "すりガラス黒",
+      bgRgb: "15, 22, 36",
+      bgAltRgb: "23, 33, 52",
+      defaultOpacity: 0.86,
+      borderColor: "rgba(148, 163, 184, 0.28)",
+      textPrimary: "#F8FAFC",
+      textSecondary: "#CBD5E1",
+      textMuted: "#94A3B8",
+      accent: "#38BDF8",
+      accent2: "#818CF8",
+      badgeText: "#082F49",
+      radiusPx: 18,
+      isLight: false,
+      pixelBorder: false,
+    },
+    sakura_macaron: {
+      id: "sakura_macaron",
+      name: "Sakura Macaron",
+      jpName: "ゆめかわピンク",
+      bgRgb: "255, 245, 249",
+      bgAltRgb: "253, 232, 241",
+      defaultOpacity: 0.92,
+      borderColor: "rgba(236, 72, 153, 0.36)",
+      textPrimary: "#4A1D34",
+      textSecondary: "#703252",
+      textMuted: "#9D5C7D",
+      accent: "#EC4899",
+      accent2: "#F472B6",
+      badgeText: "#FFFFFF",
+      radiusPx: 24,
+      isLight: true,
+      pixelBorder: false,
+    },
+    cyber_neon: {
+      id: "cyber_neon",
+      name: "Cyber Neon",
+      jpName: "ネオンシアン×マゼンタ",
+      bgRgb: "9, 11, 24",
+      bgAltRgb: "16, 20, 42",
+      defaultOpacity: 0.9,
+      borderColor: "rgba(0, 240, 255, 0.58)",
+      textPrimary: "#ECFEFF",
+      textSecondary: "#A5F3FC",
+      textMuted: "#67E8F9",
+      accent: "#00F0FF",
+      accent2: "#FF2A85",
+      badgeText: "#041E24",
+      radiusPx: 6,
+      isLight: false,
+      pixelBorder: false,
+    },
+    starlight_navy: {
+      id: "starlight_navy",
+      name: "Starlight Navy",
+      jpName: "夜空ゴールド",
+      bgRgb: "12, 20, 44",
+      bgAltRgb: "20, 32, 68",
+      defaultOpacity: 0.88,
+      borderColor: "rgba(245, 196, 81, 0.45)",
+      textPrimary: "#FEFCE8",
+      textSecondary: "#E2E8F0",
+      textMuted: "#94A3B8",
+      accent: "#F5C451",
+      accent2: "#FDE047",
+      badgeText: "#2A1B02",
+      radiusPx: 16,
+      isLight: false,
+      pixelBorder: false,
+    },
+    latte_cafe: {
+      id: "latte_cafe",
+      name: "Latte Cafe",
+      jpName: "カフェベージュ",
+      bgRgb: "250, 243, 234",
+      bgAltRgb: "241, 229, 214",
+      defaultOpacity: 0.93,
+      borderColor: "rgba(166, 118, 76, 0.38)",
+      textPrimary: "#3B2818",
+      textSecondary: "#5E432C",
+      textMuted: "#8B6B4F",
+      accent: "#B4693E",
+      accent2: "#D9915B",
+      badgeText: "#FFFFFF",
+      radiusPx: 20,
+      isLight: true,
+      pixelBorder: false,
+    },
+    pixel_retro: {
+      id: "pixel_retro",
+      name: "Pixel Retro",
+      jpName: "レトロドット風",
+      bgRgb: "20, 18, 31",
+      bgAltRgb: "32, 28, 48",
+      defaultOpacity: 0.94,
+      borderColor: "rgba(52, 211, 153, 0.88)",
+      textPrimary: "#ECFDF5",
+      textSecondary: "#A7F3D0",
+      textMuted: "#6EE7B7",
+      accent: "#34D399",
+      accent2: "#FBBF24",
+      badgeText: "#052E16",
+      radiusPx: 0,
+      isLight: false,
+      pixelBorder: true,
+    },
+  };
+
+  const CHIME_PRESETS = {
+    crystal_bell: {
+      id: "crystal_bell",
+      name: "Crystal Bell",
+      jpName: "クリスタルベル",
+    },
+    lofi_rhodes: {
+      id: "lofi_rhodes",
+      name: "Lo-Fi Rhodes",
+      jpName: "チル作業エレピ",
+    },
+    retro_8bit: {
+      id: "retro_8bit",
+      name: "8-Bit Chime",
+      jpName: "レトロピコピコ音",
+    },
+  };
+
+  const VALID_MODES = ["utawaku", "pomodoro", "clock", "all_in_one"];
+  const VALID_SUB_MODES = ["utawaku", "pomodoro"];
+  const VALID_POSITIONS = ["left", "right", "compact"];
+
+  let _idSeq = 1;
+  function makeId(prefix = "item") {
+    _idSeq += 1;
+    const rand = Math.random().toString(36).slice(2, 7);
+    return `${prefix}_${Date.now().toString(36)}_${_idSeq}_${rand}`;
+  }
+
+  function cloneState(state) {
+    return JSON.parse(JSON.stringify(state));
+  }
+
+  function clampNumber(val, min, max, fallback) {
+    const num = Number(val);
+    if (!Number.isFinite(num)) return fallback;
+    return Math.min(max, Math.max(min, num));
+  }
+
+  function sanitizeHexColor(hex, fallback = "") {
+    if (typeof hex !== "string") return fallback;
+    const trimmed = hex.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) {
+      return trimmed.toUpperCase();
+    }
+    return fallback;
+  }
+
+  function sanitizeText(str, maxLen = 160) {
+    if (typeof str !== "string") return "";
+    return str.replace(/[\u0000-\u001F\u007F]/g, "").trim().slice(0, maxLen);
+  }
+
+  function getEditionRules(edition = "lite") {
+    return EDITIONS[edition === "pro" ? "pro" : "lite"];
+  }
+
+  function createDefaultSongs() {
+    return [
+      {
+        id: "song_default_1",
+        title: "アイドル",
+        artist: "YOASOBI",
+        status: "current",
+        startedAtSec: 312,
+        note: "",
+      },
+      {
+        id: "song_default_2",
+        title: "怪獣の花唄",
+        artist: "Vaundy",
+        status: "queued",
+        startedAtSec: null,
+        note: "",
+      },
+      {
+        id: "song_default_3",
+        title: "残酷な天使のテーゼ",
+        artist: "高橋洋子",
+        status: "queued",
+        startedAtSec: null,
+        note: "",
+      },
+      {
+        id: "song_default_4",
+        title: "群青",
+        artist: "YOASOBI",
+        status: "queued",
+        startedAtSec: null,
+        note: "",
+      },
+      {
+        id: "song_default_5",
+        title: "ファンサ",
+        artist: "mona (CV:夏川椎菜)",
+        status: "queued",
+        startedAtSec: null,
+        note: "",
+      },
+    ];
+  }
+
+  function createDefaultTodos() {
+    return [
+      { id: "todo_default_1", text: "発声＆マイク音量バランス確認", done: true },
+      { id: "todo_default_2", text: "歌枠サムネイル・待機画面セット", done: false },
+      { id: "todo_default_3", text: "タイムスタンプ概要欄コピペ", done: false },
+    ];
+  }
+
+  function createDefaultState(edition = "lite") {
+    const rules = getEditionRules(edition);
+    return {
+      schemaVersion: SCHEMA_VERSION,
+      edition: rules.id,
+      updatedAt: 1,
+      activeMode: "utawaku", // 'utawaku' | 'pomodoro' | 'clock' | 'all_in_one'
+      allInOnePrimary: "utawaku", // 'utawaku' | 'pomodoro' when activeMode === 'all_in_one'
+      overlayPosition: "left", // 'left' | 'right' | 'compact'
+      showMiniClockInCorner: true,
+      theme: {
+        themeId: "dark_frost",
+        customAccent: "",
+        opacity: THEMES.dark_frost.defaultOpacity,
+      },
+      setlist: {
+        streamTitle: "🎤 歌枠 SINGING STREAM",
+        songs: createDefaultSongs(),
+        showSungHistory: true,
+        includeOpeningZero: true,
+        openingLabel: "配信開始 / OP",
+      },
+      streamTimer: {
+        isRunning: false,
+        startedEpochMs: null,
+        accumulatedSec: 312, // 0:05:12 demo default so preview shows realistic timestamp immediately
+        offsetSec: 0,
+      },
+      pomodoro: {
+        phase: "work", // 'work' | 'break' | 'long_break'
+        isRunning: false,
+        remainingSec: 25 * 60,
+        endEpochMs: null,
+        workMinutes: 25,
+        breakMinutes: 5,
+        longBreakMinutes: 15,
+        currentSet: 1,
+        cyclesBeforeLongBreak: 4,
+        completedSetsToday: 0,
+        autoStartNext: true,
+        chimePreset: "crystal_bell",
+        chimeVolume: 0.65,
+        chimeMuted: false,
+        todos: createDefaultTodos(),
+      },
+      clock: {
+        hashtag: "#歌枠 #VTuber",
+        marqueeText: "初見さん大歓迎！リクエスト＆コメントお気軽にどうぞ♪ 高評価・チャンネル登録よろしくね✨",
+        showSeconds: false,
+        use24Hour: true,
+      },
+    };
+  }
+
+  function sanitizeStateForEdition(rawState, edition = "lite") {
+    const rules = getEditionRules(edition);
+    const fallback = createDefaultState(rules.id);
+    if (!rawState || typeof rawState !== "object") {
+      return fallback;
+    }
+
+    const next = cloneState(fallback);
+    next.edition = rules.id;
+    next.updatedAt = Number.isFinite(Number(rawState.updatedAt))
+      ? Number(rawState.updatedAt)
+      : fallback.updatedAt;
+
+    if (VALID_MODES.includes(rawState.activeMode)) {
+      next.activeMode = rawState.activeMode;
+    }
+    if (VALID_SUB_MODES.includes(rawState.allInOnePrimary)) {
+      next.allInOnePrimary = rawState.allInOnePrimary;
+    }
+    if (VALID_POSITIONS.includes(rawState.overlayPosition)) {
+      next.overlayPosition = rawState.overlayPosition;
+    }
+    if (typeof rawState.showMiniClockInCorner === "boolean") {
+      next.showMiniClockInCorner = rawState.showMiniClockInCorner;
+    }
+
+    // Theme gating
+    const rawTheme = rawState.theme || {};
+    const requestedThemeId = typeof rawTheme.themeId === "string" ? rawTheme.themeId : "dark_frost";
+    next.theme.themeId = rules.allowedThemes.includes(requestedThemeId)
+      ? requestedThemeId
+      : "dark_frost";
+    const themeObj = THEMES[next.theme.themeId] || THEMES.dark_frost;
+    next.theme.customAccent = rules.allowCustomTheme
+      ? sanitizeHexColor(rawTheme.customAccent, "")
+      : "";
+    next.theme.opacity = rules.allowCustomTheme
+      ? clampNumber(rawTheme.opacity, 0.2, 1.0, themeObj.defaultOpacity)
+      : themeObj.defaultOpacity;
+
+    // Setlist gating
+    const rawSetlist = rawState.setlist || {};
+    if (typeof rawSetlist.streamTitle === "string") {
+      next.setlist.streamTitle = sanitizeText(rawSetlist.streamTitle, 60) || fallback.setlist.streamTitle;
+    }
+    if (typeof rawSetlist.showSungHistory === "boolean") {
+      next.setlist.showSungHistory = rawSetlist.showSungHistory;
+    }
+    if (typeof rawSetlist.includeOpeningZero === "boolean") {
+      next.setlist.includeOpeningZero = rawSetlist.includeOpeningZero;
+    }
+    if (typeof rawSetlist.openingLabel === "string") {
+      next.setlist.openingLabel = sanitizeText(rawSetlist.openingLabel, 50) || "配信開始 / OP";
+    }
+    if (Array.isArray(rawSetlist.songs)) {
+      let currentFound = false;
+      next.setlist.songs = rawSetlist.songs
+        .slice(0, rules.maxSongs)
+        .map((song, idx) => {
+          const title = sanitizeText(song && song.title, 100);
+          if (!title) return null;
+          let status = ["queued", "current", "sung"].includes(song.status)
+            ? song.status
+            : "queued";
+          if (status === "current") {
+            if (currentFound) {
+              status = "queued";
+            } else {
+              currentFound = true;
+            }
+          }
+          const startedAtSec =
+            song && song.startedAtSec !== null && song.startedAtSec !== undefined && Number.isFinite(Number(song.startedAtSec))
+              ? Math.max(0, Math.floor(Number(song.startedAtSec)))
+              : null;
+          return {
+            id: sanitizeText(song.id, 64) || `song_${idx + 1}`,
+            title,
+            artist: sanitizeText(song && song.artist, 80),
+            status,
+            startedAtSec,
+            note: sanitizeText(song && song.note, 80),
+          };
+        })
+        .filter(Boolean);
+    }
+
+    // Stream Timer
+    const rawTimer = rawState.streamTimer || {};
+    next.streamTimer.isRunning = Boolean(rawTimer.isRunning);
+    next.streamTimer.startedEpochMs =
+      next.streamTimer.isRunning && Number.isFinite(Number(rawTimer.startedEpochMs))
+        ? Number(rawTimer.startedEpochMs)
+        : null;
+    if (!next.streamTimer.isRunning) {
+      next.streamTimer.startedEpochMs = null;
+    }
+    next.streamTimer.accumulatedSec = clampNumber(rawTimer.accumulatedSec, 0, 86400 * 3, 0);
+    next.streamTimer.offsetSec = rules.allowTimestamps
+      ? Math.round(clampNumber(rawTimer.offsetSec, -3600, 3600, 0))
+      : 0;
+
+    // Pomodoro gating
+    const rawPomo = rawState.pomodoro || {};
+    next.pomodoro.phase = ["work", "break", "long_break"].includes(rawPomo.phase)
+      ? rawPomo.phase
+      : "work";
+    next.pomodoro.workMinutes = rules.allowCustomPomodoro
+      ? Math.round(clampNumber(rawPomo.workMinutes, 1, 180, 25))
+      : 25;
+    next.pomodoro.breakMinutes = rules.allowCustomPomodoro
+      ? Math.round(clampNumber(rawPomo.breakMinutes, 1, 90, 5))
+      : 5;
+    next.pomodoro.longBreakMinutes = rules.allowCustomPomodoro
+      ? Math.round(clampNumber(rawPomo.longBreakMinutes, 1, 120, 15))
+      : 15;
+    next.pomodoro.cyclesBeforeLongBreak = rules.allowCustomPomodoro
+      ? Math.round(clampNumber(rawPomo.cyclesBeforeLongBreak, 2, 12, 4))
+      : 4;
+    next.pomodoro.currentSet = Math.round(
+      clampNumber(rawPomo.currentSet, 1, next.pomodoro.cyclesBeforeLongBreak, 1)
+    );
+    next.pomodoro.completedSetsToday = Math.round(
+      clampNumber(rawPomo.completedSetsToday, 0, 999, 0)
+    );
+    next.pomodoro.autoStartNext =
+      typeof rawPomo.autoStartNext === "boolean" ? rawPomo.autoStartNext : true;
+    next.pomodoro.chimePreset =
+      rules.allowCustomPomodoro && CHIME_PRESETS[rawPomo.chimePreset]
+        ? rawPomo.chimePreset
+        : "crystal_bell";
+    next.pomodoro.chimeVolume = clampNumber(rawPomo.chimeVolume, 0, 1, 0.65);
+    next.pomodoro.chimeMuted = Boolean(rawPomo.chimeMuted);
+
+    const phaseDurationSec = getPhaseDurationSeconds(next.pomodoro, next.pomodoro.phase);
+    next.pomodoro.isRunning = Boolean(rawPomo.isRunning);
+    next.pomodoro.remainingSec = Math.round(
+      clampNumber(rawPomo.remainingSec, 0, 180 * 60, phaseDurationSec)
+    );
+    next.pomodoro.endEpochMs =
+      next.pomodoro.isRunning && Number.isFinite(Number(rawPomo.endEpochMs))
+        ? Number(rawPomo.endEpochMs)
+        : null;
+    if (!next.pomodoro.isRunning) {
+      next.pomodoro.endEpochMs = null;
+    }
+
+    if (Array.isArray(rawPomo.todos)) {
+      next.pomodoro.todos = rawPomo.todos
+        .slice(0, 30)
+        .map((todo, idx) => {
+          const text = sanitizeText(todo && todo.text, 100);
+          if (!text) return null;
+          return {
+            id: sanitizeText(todo.id, 64) || `todo_${idx + 1}`,
+            text,
+            done: Boolean(todo.done),
+          };
+        })
+        .filter(Boolean);
+    }
+
+    // Clock
+    const rawClock = rawState.clock || {};
+    if (typeof rawClock.hashtag === "string") {
+      next.clock.hashtag = sanitizeText(rawClock.hashtag, 60);
+    }
+    if (typeof rawClock.marqueeText === "string") {
+      next.clock.marqueeText = sanitizeText(rawClock.marqueeText, 240);
+    }
+    if (typeof rawClock.showSeconds === "boolean") {
+      next.clock.showSeconds = rawClock.showSeconds;
+    }
+    if (typeof rawClock.use24Hour === "boolean") {
+      next.clock.use24Hour = rawClock.use24Hour;
+    }
+
+    return next;
+  }
+
+  function bumpRevision(state) {
+    state.updatedAt = Math.max((state.updatedAt || 0) + 1, Date.now());
+    return state;
+  }
+
+  // -------------------------------------------------------------------------
+  // Formatting & Stream Timer / Timestamp Logic
+  // -------------------------------------------------------------------------
+  function formatHms(totalSec) {
+    const clamped = Math.max(0, Math.floor(Number(totalSec) || 0));
+    const hours = Math.floor(clamped / 3600);
+    const minutes = Math.floor((clamped % 3600) / 60);
+    const seconds = clamped % 60;
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  function formatMmSs(totalSec) {
+    const clamped = Math.max(0, Math.ceil(Number(totalSec) || 0));
+    const minutes = Math.floor(clamped / 60);
+    const seconds = clamped % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  function parseHmsInput(str) {
+    if (typeof str !== "string") return null;
+    const cleaned = str.trim();
+    if (!cleaned) return null;
+    const parts = cleaned.split(":").map((p) => p.trim());
+    if (parts.some((p) => !/^\d+$/.test(p))) return null;
+    if (parts.length === 3) {
+      return Number(parts[0]) * 3600 + Number(parts[1]) * 60 + Number(parts[2]);
+    }
+    if (parts.length === 2) {
+      return Number(parts[0]) * 60 + Number(parts[1]);
+    }
+    if (parts.length === 1) {
+      return Number(parts[0]);
+    }
+    return null;
+  }
+
+  function getStreamElapsedSec(state, nowMs = Date.now()) {
+    const timer = state.streamTimer || { isRunning: false, startedEpochMs: null, accumulatedSec: 0 };
+    const base = Math.max(0, Math.floor(Number(timer.accumulatedSec) || 0));
+    if (timer.isRunning && Number.isFinite(timer.startedEpochMs)) {
+      const delta = Math.max(0, Math.floor((nowMs - timer.startedEpochMs) / 1000));
+      return base + delta;
+    }
+    return base;
+  }
+
+  function startStreamTimer(state, nowMs = Date.now()) {
+    const next = cloneState(state);
+    if (!next.streamTimer.isRunning) {
+      next.streamTimer.isRunning = true;
+      next.streamTimer.startedEpochMs = nowMs;
+      bumpRevision(next);
+    }
+    return next;
+  }
+
+  function pauseStreamTimer(state, nowMs = Date.now()) {
+    const next = cloneState(state);
+    if (next.streamTimer.isRunning) {
+      next.streamTimer.accumulatedSec = getStreamElapsedSec(next, nowMs);
+      next.streamTimer.isRunning = false;
+      next.streamTimer.startedEpochMs = null;
+      bumpRevision(next);
+    }
+    return next;
+  }
+
+  function resetStreamTimer(state) {
+    const next = cloneState(state);
+    next.streamTimer.isRunning = false;
+    next.streamTimer.startedEpochMs = null;
+    next.streamTimer.accumulatedSec = 0;
+    next.streamTimer.offsetSec = 0;
+    next.setlist.songs = next.setlist.songs.map((s) => ({
+      ...s,
+      startedAtSec: null,
+    }));
+    bumpRevision(next);
+    return next;
+  }
+
+  function adjustStreamOffset(state, deltaSec, edition = state.edition) {
+    const rules = getEditionRules(edition);
+    if (!rules.allowTimestamps) {
+      return {
+        state: cloneState(state),
+        error: "タイムスタンプ微調整はPro版の機能です。",
+      };
+    }
+    const next = cloneState(state);
+    next.streamTimer.offsetSec = Math.round(
+      clampNumber((next.streamTimer.offsetSec || 0) + Number(deltaSec || 0), -3600, 3600, 0)
+    );
+    bumpRevision(next);
+    return { state: next, error: null };
+  }
+
+  function setStreamOffset(state, offsetSec, edition = state.edition) {
+    const rules = getEditionRules(edition);
+    if (!rules.allowTimestamps) {
+      return {
+        state: cloneState(state),
+        error: "タイムスタンプ微調整はPro版の機能です。",
+      };
+    }
+    const next = cloneState(state);
+    next.streamTimer.offsetSec = Math.round(clampNumber(offsetSec, -3600, 3600, 0));
+    bumpRevision(next);
+    return { state: next, error: null };
+  }
+
+  function generateYoutubeTimestampList(state, options = {}) {
+    const includeHeader = options.includeHeader !== undefined ? options.includeHeader : true;
+    const includeOpeningZero =
+      options.includeOpeningZero !== undefined
+        ? options.includeOpeningZero
+        : Boolean(state.setlist && state.setlist.includeOpeningZero);
+    const offsetSec = Number((state.streamTimer && state.streamTimer.offsetSec) || 0);
+    const songs = (state.setlist && state.setlist.songs) || [];
+
+    const stamped = songs
+      .map((song, index) => ({ song, index }))
+      .filter(({ song }) => song.startedAtSec !== null && song.startedAtSec !== undefined)
+      .map(({ song, index }) => {
+        const adjustedSec = Math.max(0, Math.floor(Number(song.startedAtSec) + offsetSec));
+        const label = song.artist ? `${song.title} / ${song.artist}` : song.title;
+        return {
+          adjustedSec,
+          index,
+          line: `${formatHms(adjustedSec)} ${label}`,
+        };
+      })
+      .sort((a, b) => (a.adjustedSec !== b.adjustedSec ? a.adjustedSec - b.adjustedSec : a.index - b.index));
+
+    const lines = [];
+    if (includeHeader) {
+      lines.push("🎤 本日のセトリ / TIMESTAMPS");
+    }
+    if (includeOpeningZero) {
+      const opLabel = (state.setlist && state.setlist.openingLabel) || "配信開始 / OP";
+      const alreadyHasZero = stamped.some((item) => item.adjustedSec === 0);
+      if (!alreadyHasZero) {
+        lines.push(`0:00:00 ${opLabel}`);
+      }
+    }
+    for (const item of stamped) {
+      lines.push(item.line);
+    }
+    return lines.join("\n");
+  }
+
+  // -------------------------------------------------------------------------
+  // Setlist Operations & Bulk Text Parser
+  // -------------------------------------------------------------------------
+  function parseSongLine(rawLine) {
+    if (typeof rawLine !== "string") return null;
+    let line = rawLine.trim();
+    if (!line) return null;
+
+    // Strip leading bullet or numbering e.g. "01. ", "1) ", "① ", "♪ ", "- "
+    line = line
+      .replace(/^(?:[#♪♫♬・\-*]+|\d{1,3}[.)．:：、]\s*|[①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳]\s*)/u, "")
+      .trim();
+    if (!line) return null;
+
+    // Strip leading timestamp if user pasted an existing timestamp line
+    line = line.replace(/^\d{1,2}:\d{2}(?::\d{2})?\s+/, "").trim();
+    if (!line) return null;
+
+    // Match explicit separators: " / ", " ／ ", " - ", " ― ", " | ", " ｜ "
+    const sepPatterns = [
+      /\s*[\/／｜|]\s*/,
+      /\s+[-ー―–—]\s+/,
+    ];
+    for (const regex of sepPatterns) {
+      const idx = line.search(regex);
+      if (idx > 0) {
+        const match = line.match(regex);
+        const title = sanitizeText(line.slice(0, idx), 100);
+        const artist = sanitizeText(line.slice(idx + match[0].length), 80);
+        if (title) {
+          return { title, artist };
+        }
+      }
+    }
+
+    // Match trailing parentheses e.g. "怪獣の花唄（Vaundy）" or "怪獣の花唄 (Vaundy)"
+    const parenMatch = line.match(/^(.+?)\s*[（(]([^（）()]+)[）)]\s*$/u);
+    if (parenMatch) {
+      const title = sanitizeText(parenMatch[1], 100);
+      const artist = sanitizeText(parenMatch[2], 80);
+      if (title) {
+        return { title, artist };
+      }
+    }
+
+    return { title: sanitizeText(line, 100), artist: "" };
+  }
+
+  function parseBulkSetlistText(rawText) {
+    if (typeof rawText !== "string") return [];
+    return rawText
+      .split(/\r?\n/)
+      .map(parseSongLine)
+      .filter((item) => item && item.title);
+  }
+
+  function addSong(state, songInput, edition = state.edition) {
+    const rules = getEditionRules(edition);
+    const title = sanitizeText(songInput && songInput.title, 100);
+    const artist = sanitizeText(songInput && songInput.artist, 80);
+    const note = sanitizeText(songInput && songInput.note, 80);
+
+    if (!title) {
+      return { state: cloneState(state), error: "曲名を入力してください。" };
+    }
+    if (state.setlist.songs.length >= rules.maxSongs) {
+      return {
+        state: cloneState(state),
+        error:
+          rules.id === "lite"
+            ? `無料体験版(Lite)は最大${rules.maxSongs}曲まで登録できます。Pro版は無制限＋一括貼付に対応しています！`
+            : `最大${rules.maxSongs}曲に達しています。`,
+      };
+    }
+
+    const next = cloneState(state);
+    const hasCurrent = next.setlist.songs.some((s) => s.status === "current");
+    next.setlist.songs.push({
+      id: makeId("song"),
+      title,
+      artist,
+      status: hasCurrent || next.setlist.songs.length > 0 ? "queued" : "current",
+      startedAtSec: null,
+      note,
+    });
+    bumpRevision(next);
+    return { state: next, error: null };
+  }
+
+  function bulkImportSongs(state, rawText, options = {}, edition = state.edition) {
+    const rules = getEditionRules(edition);
+    if (!rules.allowBulkPaste) {
+      return {
+        state: cloneState(state),
+        addedCount: 0,
+        error: "テキスト一括貼付はPro版の限定機能です。",
+      };
+    }
+    const parsed = parseBulkSetlistText(rawText);
+    if (parsed.length === 0) {
+      return {
+        state: cloneState(state),
+        addedCount: 0,
+        error: "追加できる曲が見つかりませんでした（1行に1曲ずつ「曲名 / アーティスト」で入力してください）。",
+      };
+    }
+
+    const next = cloneState(state);
+    const baseSongs = options.replace ? [] : next.setlist.songs;
+    const availableSlots = Math.max(0, rules.maxSongs - baseSongs.length);
+    const sliced = parsed.slice(0, availableSlots).map((item, idx) => ({
+      id: makeId(`bulk_${idx}`),
+      title: item.title,
+      artist: item.artist,
+      status: "queued",
+      startedAtSec: null,
+      note: "",
+    }));
+
+    next.setlist.songs = [...baseSongs, ...sliced];
+    bumpRevision(next);
+    return { state: next, addedCount: sliced.length, error: null };
+  }
+
+  function startSongById(state, songId, nowMs = Date.now()) {
+    const next = cloneState(state);
+    const targetIdx = next.setlist.songs.findIndex((s) => s.id === songId);
+    if (targetIdx === -1) return next;
+
+    const elapsedSec = getStreamElapsedSec(next, nowMs);
+    const shouldStamp = next.streamTimer.isRunning || elapsedSec > 0;
+
+    next.setlist.songs = next.setlist.songs.map((song, idx) => {
+      if (idx === targetIdx) {
+        return {
+          ...song,
+          status: "current",
+          startedAtSec: shouldStamp ? elapsedSec : song.startedAtSec,
+        };
+      }
+      if (song.status === "current") {
+        return {
+          ...song,
+          status: "sung",
+        };
+      }
+      return song;
+    });
+
+    bumpRevision(next);
+    return next;
+  }
+
+  function advanceToNextSong(state, nowMs = Date.now()) {
+    const next = cloneState(state);
+    const songs = next.setlist.songs;
+    if (songs.length === 0) return next;
+
+    const currentIdx = songs.findIndex((s) => s.status === "current");
+    let nextQueuedIdx = -1;
+
+    if (currentIdx >= 0) {
+      // Look for first queued song after currentIdx, else any queued song
+      for (let i = currentIdx + 1; i < songs.length; i += 1) {
+        if (songs[i].status === "queued") {
+          nextQueuedIdx = i;
+          break;
+        }
+      }
+    }
+    if (nextQueuedIdx === -1) {
+      nextQueuedIdx = songs.findIndex((s) => s.status === "queued");
+    }
+
+    const elapsedSec = getStreamElapsedSec(next, nowMs);
+    const shouldStamp = next.streamTimer.isRunning || elapsedSec > 0;
+
+    if (currentIdx >= 0) {
+      songs[currentIdx] = { ...songs[currentIdx], status: "sung" };
+    }
+    if (nextQueuedIdx >= 0) {
+      songs[nextQueuedIdx] = {
+        ...songs[nextQueuedIdx],
+        status: "current",
+        startedAtSec: shouldStamp ? elapsedSec : songs[nextQueuedIdx].startedAtSec,
+      };
+    }
+
+    bumpRevision(next);
+    return next;
+  }
+
+  function rewindToPreviousSong(state) {
+    const next = cloneState(state);
+    const songs = next.setlist.songs;
+    if (songs.length === 0) return next;
+
+    const currentIdx = songs.findIndex((s) => s.status === "current");
+    if (currentIdx > 0) {
+      songs[currentIdx] = { ...songs[currentIdx], status: "queued" };
+      songs[currentIdx - 1] = { ...songs[currentIdx - 1], status: "current" };
+    } else if (currentIdx === -1) {
+      // Find last sung song and restore to current
+      for (let i = songs.length - 1; i >= 0; i -= 1) {
+        if (songs[i].status === "sung") {
+          songs[i] = { ...songs[i], status: "current" };
+          break;
+        }
+      }
+    }
+    bumpRevision(next);
+    return next;
+  }
+
+  function removeSong(state, songId) {
+    const next = cloneState(state);
+    next.setlist.songs = next.setlist.songs.filter((s) => s.id !== songId);
+    bumpRevision(next);
+    return next;
+  }
+
+  function moveSong(state, songId, direction) {
+    const next = cloneState(state);
+    const idx = next.setlist.songs.findIndex((s) => s.id === songId);
+    if (idx === -1) return next;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= next.setlist.songs.length) return next;
+    const temp = next.setlist.songs[idx];
+    next.setlist.songs[idx] = next.setlist.songs[swapIdx];
+    next.setlist.songs[swapIdx] = temp;
+    bumpRevision(next);
+    return next;
+  }
+
+  function updateSongTimestamp(state, songId, timestampInput) {
+    const next = cloneState(state);
+    const sec =
+      timestampInput === null || timestampInput === ""
+        ? null
+        : typeof timestampInput === "number"
+        ? Math.max(0, Math.floor(timestampInput))
+        : parseHmsInput(String(timestampInput));
+    next.setlist.songs = next.setlist.songs.map((s) =>
+      s.id === songId ? { ...s, startedAtSec: sec } : s
+    );
+    bumpRevision(next);
+    return next;
+  }
+
+  function resetSetlistProgress(state) {
+    const next = cloneState(state);
+    next.setlist.songs = next.setlist.songs.map((s, idx) => ({
+      ...s,
+      status: idx === 0 ? "current" : "queued",
+      startedAtSec: null,
+    }));
+    bumpRevision(next);
+    return next;
+  }
+
+  function getSetlistSummary(state) {
+    const songs = (state.setlist && state.setlist.songs) || [];
+    const currentIndex = songs.findIndex((s) => s.status === "current");
+    const currentSong = currentIndex >= 0 ? { ...songs[currentIndex], number: currentIndex + 1 } : null;
+
+    let nextSong = null;
+    if (currentIndex >= 0) {
+      for (let i = currentIndex + 1; i < songs.length; i += 1) {
+        if (songs[i].status === "queued") {
+          nextSong = { ...songs[i], number: i + 1 };
+          break;
+        }
+      }
+    }
+    if (!nextSong) {
+      const firstQueuedIdx = songs.findIndex((s) => s.status === "queued");
+      if (firstQueuedIdx >= 0) {
+        nextSong = { ...songs[firstQueuedIdx], number: firstQueuedIdx + 1 };
+      }
+    }
+
+    const sungSongs = songs
+      .map((s, idx) => ({ ...s, number: idx + 1 }))
+      .filter((s) => s.status === "sung");
+    const queuedSongs = songs
+      .map((s, idx) => ({ ...s, number: idx + 1 }))
+      .filter((s) => s.status === "queued");
+
+    return {
+      totalCount: songs.length,
+      currentSong,
+      nextSong,
+      sungSongs,
+      queuedSongs,
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // Pomodoro & Task Checklist Logic
+  // -------------------------------------------------------------------------
+  function getPhaseDurationSeconds(pomodoro, phase = pomodoro.phase) {
+    if (phase === "break") {
+      return Math.max(60, Math.round(Number(pomodoro.breakMinutes || 5) * 60));
+    }
+    if (phase === "long_break") {
+      return Math.max(60, Math.round(Number(pomodoro.longBreakMinutes || 15) * 60));
+    }
+    return Math.max(60, Math.round(Number(pomodoro.workMinutes || 25) * 60));
+  }
+
+  function getPomodoroRemainingSec(state, nowMs = Date.now()) {
+    const pomo = state.pomodoro;
+    if (!pomo.isRunning || !Number.isFinite(pomo.endEpochMs)) {
+      return Math.max(0, Math.round(Number(pomo.remainingSec) || 0));
+    }
+    return Math.max(0, Math.ceil((pomo.endEpochMs - nowMs) / 1000));
+  }
+
+  function startPomodoro(state, nowMs = Date.now()) {
+    const next = cloneState(state);
+    if (!next.pomodoro.isRunning) {
+      if (next.pomodoro.remainingSec <= 0) {
+        next.pomodoro.remainingSec = getPhaseDurationSeconds(next.pomodoro, next.pomodoro.phase);
+      }
+      next.pomodoro.isRunning = true;
+      next.pomodoro.endEpochMs = nowMs + next.pomodoro.remainingSec * 1000;
+      bumpRevision(next);
+    }
+    return next;
+  }
+
+  function pausePomodoro(state, nowMs = Date.now()) {
+    const next = cloneState(state);
+    if (next.pomodoro.isRunning) {
+      next.pomodoro.remainingSec = getPomodoroRemainingSec(next, nowMs);
+      next.pomodoro.isRunning = false;
+      next.pomodoro.endEpochMs = null;
+      bumpRevision(next);
+    }
+    return next;
+  }
+
+  function resetPomodoroPhase(state) {
+    const next = cloneState(state);
+    next.pomodoro.isRunning = false;
+    next.pomodoro.endEpochMs = null;
+    next.pomodoro.remainingSec = getPhaseDurationSeconds(next.pomodoro, next.pomodoro.phase);
+    bumpRevision(next);
+    return next;
+  }
+
+  function resetPomodoroAll(state) {
+    const next = cloneState(state);
+    next.pomodoro.phase = "work";
+    next.pomodoro.currentSet = 1;
+    next.pomodoro.completedSetsToday = 0;
+    next.pomodoro.isRunning = false;
+    next.pomodoro.endEpochMs = null;
+    next.pomodoro.remainingSec = getPhaseDurationSeconds(next.pomodoro, "work");
+    bumpRevision(next);
+    return next;
+  }
+
+  function transitionPomodoroPhase(state, nowMs = Date.now(), forceRun = null) {
+    const next = cloneState(state);
+    const pomo = next.pomodoro;
+    const wasRunning = forceRun !== null ? Boolean(forceRun) : Boolean(pomo.isRunning && pomo.autoStartNext);
+
+    if (pomo.phase === "work") {
+      pomo.completedSetsToday = (pomo.completedSetsToday || 0) + 1;
+      if (pomo.currentSet >= pomo.cyclesBeforeLongBreak) {
+        pomo.phase = "long_break";
+      } else {
+        pomo.phase = "break";
+      }
+    } else {
+      if (pomo.phase === "long_break") {
+        pomo.currentSet = 1;
+      } else {
+        pomo.currentSet = Math.min(pomo.cyclesBeforeLongBreak, (pomo.currentSet || 1) + 1);
+      }
+      pomo.phase = "work";
+    }
+
+    pomo.remainingSec = getPhaseDurationSeconds(pomo, pomo.phase);
+    pomo.isRunning = wasRunning;
+    pomo.endEpochMs = wasRunning ? nowMs + pomo.remainingSec * 1000 : null;
+    bumpRevision(next);
+    return {
+      state: next,
+      phaseChanged: true,
+      newPhase: pomo.phase,
+    };
+  }
+
+  function tickPomodoro(state, nowMs = Date.now()) {
+    if (!state.pomodoro.isRunning || !Number.isFinite(state.pomodoro.endEpochMs)) {
+      return { state, phaseChanged: false, newPhase: state.pomodoro.phase };
+    }
+    if (nowMs >= state.pomodoro.endEpochMs) {
+      return transitionPomodoroPhase(state, nowMs, state.pomodoro.autoStartNext);
+    }
+    return { state, phaseChanged: false, newPhase: state.pomodoro.phase };
+  }
+
+  function configurePomodoro(state, config, edition = state.edition) {
+    const rules = getEditionRules(edition);
+    const next = cloneState(state);
+    const pomo = next.pomodoro;
+
+    if (typeof config.chimeVolume === "number") {
+      pomo.chimeVolume = clampNumber(config.chimeVolume, 0, 1, pomo.chimeVolume);
+    }
+    if (typeof config.chimeMuted === "boolean") {
+      pomo.chimeMuted = config.chimeMuted;
+    }
+    if (typeof config.autoStartNext === "boolean") {
+      pomo.autoStartNext = config.autoStartNext;
+    }
+
+    if (!rules.allowCustomPomodoro) {
+      const attemptedProChange =
+        (config.workMinutes !== undefined && Number(config.workMinutes) !== 25) ||
+        (config.breakMinutes !== undefined && Number(config.breakMinutes) !== 5) ||
+        (config.chimePreset !== undefined && config.chimePreset !== "crystal_bell");
+      bumpRevision(next);
+      return {
+        state: next,
+        error: attemptedProChange
+          ? "カスタム時間設定（50分/10分等）＆チャイム変更はPro版の機能です。"
+          : null,
+      };
+    }
+
+    if (config.workMinutes !== undefined) {
+      pomo.workMinutes = Math.round(clampNumber(config.workMinutes, 1, 180, pomo.workMinutes));
+    }
+    if (config.breakMinutes !== undefined) {
+      pomo.breakMinutes = Math.round(clampNumber(config.breakMinutes, 1, 90, pomo.breakMinutes));
+    }
+    if (config.longBreakMinutes !== undefined) {
+      pomo.longBreakMinutes = Math.round(
+        clampNumber(config.longBreakMinutes, 1, 120, pomo.longBreakMinutes)
+      );
+    }
+    if (config.cyclesBeforeLongBreak !== undefined) {
+      pomo.cyclesBeforeLongBreak = Math.round(
+        clampNumber(config.cyclesBeforeLongBreak, 2, 12, pomo.cyclesBeforeLongBreak)
+      );
+      pomo.currentSet = Math.min(pomo.currentSet, pomo.cyclesBeforeLongBreak);
+    }
+    if (config.chimePreset && CHIME_PRESETS[config.chimePreset]) {
+      pomo.chimePreset = config.chimePreset;
+    }
+
+    if (!pomo.isRunning) {
+      pomo.remainingSec = getPhaseDurationSeconds(pomo, pomo.phase);
+    }
+
+    bumpRevision(next);
+    return { state: next, error: null };
+  }
+
+  function addTodo(state, text) {
+    const cleaned = sanitizeText(text, 100);
+    if (!cleaned) return state;
+    const next = cloneState(state);
+    if (next.pomodoro.todos.length >= 30) return next;
+    next.pomodoro.todos.push({
+      id: makeId("todo"),
+      text: cleaned,
+      done: false,
+    });
+    bumpRevision(next);
+    return next;
+  }
+
+  function toggleTodo(state, todoId) {
+    const next = cloneState(state);
+    next.pomodoro.todos = next.pomodoro.todos.map((t) =>
+      t.id === todoId ? { ...t, done: !t.done } : t
+    );
+    bumpRevision(next);
+    return next;
+  }
+
+  function removeTodo(state, todoId) {
+    const next = cloneState(state);
+    next.pomodoro.todos = next.pomodoro.todos.filter((t) => t.id !== todoId);
+    bumpRevision(next);
+    return next;
+  }
+
+  // -------------------------------------------------------------------------
+  // Mode, Theme, Clock & Preset Export/Import
+  // -------------------------------------------------------------------------
+  function setActiveMode(state, mode, allInOnePrimary = null) {
+    if (!VALID_MODES.includes(mode)) return state;
+    const next = cloneState(state);
+    next.activeMode = mode;
+    if (allInOnePrimary && VALID_SUB_MODES.includes(allInOnePrimary)) {
+      next.allInOnePrimary = allInOnePrimary;
+    }
+    bumpRevision(next);
+    return next;
+  }
+
+  function setOverlayPosition(state, position) {
+    if (!VALID_POSITIONS.includes(position)) return state;
+    const next = cloneState(state);
+    next.overlayPosition = position;
+    bumpRevision(next);
+    return next;
+  }
+
+  function setTheme(state, themeId, edition = state.edition) {
+    const rules = getEditionRules(edition);
+    if (!THEMES[themeId]) {
+      return { state: cloneState(state), error: "不明なテーマです。" };
+    }
+    if (!rules.allowedThemes.includes(themeId)) {
+      return {
+        state: cloneState(state),
+        error: `「${THEMES[themeId].name}」テーマはProフルパック(全6テーマ収録)で利用できます！`,
+      };
+    }
+    const next = cloneState(state);
+    next.theme.themeId = themeId;
+    if (!rules.allowCustomTheme) {
+      next.theme.opacity = THEMES[themeId].defaultOpacity;
+      next.theme.customAccent = "";
+    }
+    bumpRevision(next);
+    return { state: next, error: null };
+  }
+
+  function setCustomThemeOptions(state, opts, edition = state.edition) {
+    const rules = getEditionRules(edition);
+    if (!rules.allowCustomTheme) {
+      return {
+        state: cloneState(state),
+        error: "アクセントカラー変更＆透過度スライダーはPro版の機能です。",
+      };
+    }
+    const next = cloneState(state);
+    if (opts.customAccent !== undefined) {
+      next.theme.customAccent = sanitizeHexColor(opts.customAccent, "");
+    }
+    if (opts.opacity !== undefined) {
+      next.theme.opacity = clampNumber(opts.opacity, 0.2, 1.0, next.theme.opacity);
+    }
+    bumpRevision(next);
+    return { state: next, error: null };
+  }
+
+  function updateClockConfig(state, patch) {
+    const next = cloneState(state);
+    if (patch.hashtag !== undefined) {
+      next.clock.hashtag = sanitizeText(patch.hashtag, 60);
+    }
+    if (patch.marqueeText !== undefined) {
+      next.clock.marqueeText = sanitizeText(patch.marqueeText, 240);
+    }
+    if (typeof patch.showSeconds === "boolean") {
+      next.clock.showSeconds = patch.showSeconds;
+    }
+    if (typeof patch.use24Hour === "boolean") {
+      next.clock.use24Hour = patch.use24Hour;
+    }
+    if (typeof patch.showMiniClockInCorner === "boolean") {
+      next.showMiniClockInCorner = patch.showMiniClockInCorner;
+    }
+    bumpRevision(next);
+    return next;
+  }
+
+  function updateSetlistOptions(state, patch) {
+    const next = cloneState(state);
+    if (patch.streamTitle !== undefined) {
+      next.setlist.streamTitle = sanitizeText(patch.streamTitle, 60) || "🎤 歌枠 SINGING STREAM";
+    }
+    if (typeof patch.showSungHistory === "boolean") {
+      next.setlist.showSungHistory = patch.showSungHistory;
+    }
+    if (typeof patch.includeOpeningZero === "boolean") {
+      next.setlist.includeOpeningZero = patch.includeOpeningZero;
+    }
+    if (patch.openingLabel !== undefined) {
+      next.setlist.openingLabel = sanitizeText(patch.openingLabel, 50) || "配信開始 / OP";
+    }
+    bumpRevision(next);
+    return next;
+  }
+
+  function resolveEffectiveTheme(state) {
+    const base = THEMES[state.theme && state.theme.themeId] || THEMES.dark_frost;
+    const customAccent = sanitizeHexColor(state.theme && state.theme.customAccent, "");
+    const opacity = clampNumber(
+      state.theme && state.theme.opacity,
+      0.2,
+      1.0,
+      base.defaultOpacity
+    );
+    return {
+      ...base,
+      accent: customAccent || base.accent,
+      opacity,
+    };
+  }
+
+  function exportPresetJson(state, edition = state.edition) {
+    const rules = getEditionRules(edition);
+    if (!rules.allowJsonPresets) {
+      return { json: null, error: "JSONプリセット保存・読込はPro版の機能です。" };
+    }
+    const clean = sanitizeStateForEdition(state, "pro");
+    clean.pomodoro.isRunning = false;
+    clean.pomodoro.endEpochMs = null;
+    clean.streamTimer.isRunning = false;
+    clean.streamTimer.startedEpochMs = null;
+    return {
+      json: JSON.stringify(
+        {
+          product: "peco_obs_utawaku_pomodoro",
+          version: "1.0.0",
+          exportedAt: new Date().toISOString(),
+          state: clean,
+        },
+        null,
+        2
+      ),
+      error: null,
+    };
+  }
+
+  function importPresetJson(rawJson, edition = "pro") {
+    const rules = getEditionRules(edition);
+    if (!rules.allowJsonPresets) {
+      return { state: null, error: "JSONプリセット保存・読込はPro版の機能です。" };
+    }
+    try {
+      const parsed = JSON.parse(rawJson);
+      const candidate = parsed && parsed.state ? parsed.state : parsed;
+      if (!candidate || typeof candidate !== "object") {
+        return { state: null, error: "JSONの形式が正しくありません。" };
+      }
+      const sanitized = sanitizeStateForEdition(candidate, rules.id);
+      bumpRevision(sanitized);
+      return { state: sanitized, error: null };
+    } catch (_err) {
+      return { state: null, error: "JSONファイルの解析に失敗しました。" };
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Dual Real-Time Sync Bridge (BroadcastChannel + localStorage)
+  // -------------------------------------------------------------------------
+  function createSyncBridge(options = {}) {
+    const edition = options.edition || "lite";
+    const storageKey = options.storageKey || STORAGE_KEY;
+    const channelName = options.channelName || BROADCAST_CHANNEL_NAME;
+    const storage =
+      options.storage !== undefined
+        ? options.storage
+        : typeof window !== "undefined" && window.localStorage
+        ? window.localStorage
+        : null;
+    const BroadcastChannelCtor =
+      options.BroadcastChannelImpl !== undefined
+        ? options.BroadcastChannelImpl
+        : typeof BroadcastChannel !== "undefined"
+        ? BroadcastChannel
+        : null;
+    const win =
+      options.windowObj !== undefined
+        ? options.windowObj
+        : typeof window !== "undefined"
+        ? window
+        : null;
+    const onStateReceived =
+      typeof options.onStateReceived === "function" ? options.onStateReceived : () => {};
+
+    const instanceId = makeId("peer");
+    let lastUpdatedAt = 0;
+    let channel = null;
+
+    if (BroadcastChannelCtor) {
+      try {
+        channel = new BroadcastChannelCtor(channelName);
+        channel.onmessage = (event) => {
+          const payload = event && event.data;
+          if (!payload || payload.senderId === instanceId || !payload.state) return;
+          const incomingRev = Number(payload.state.updatedAt || 0);
+          if (incomingRev >= lastUpdatedAt) {
+            lastUpdatedAt = incomingRev;
+            onStateReceived(sanitizeStateForEdition(payload.state, edition), "broadcast");
+          }
+        };
+      } catch (_err) {
+        channel = null;
+      }
+    }
+
+    function handleStorageEvent(event) {
+      if (!event || event.key !== storageKey || !event.newValue) return;
+      try {
+        const parsed = JSON.parse(event.newValue);
+        const stateObj = parsed && parsed.state ? parsed.state : parsed;
+        if (!stateObj || (parsed && parsed.senderId === instanceId)) return;
+        const incomingRev = Number(stateObj.updatedAt || 0);
+        if (incomingRev >= lastUpdatedAt) {
+          lastUpdatedAt = incomingRev;
+          onStateReceived(sanitizeStateForEdition(stateObj, edition), "storage");
+        }
+      } catch (_err) {
+        // Ignore malformed external writes
+      }
+    }
+
+    if (win && typeof win.addEventListener === "function") {
+      win.addEventListener("storage", handleStorageEvent);
+    }
+
+    function loadInitialState() {
+      if (storage) {
+        try {
+          const raw = storage.getItem(storageKey);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            const candidate = parsed && parsed.state ? parsed.state : parsed;
+            const restored = sanitizeStateForEdition(candidate, edition);
+            lastUpdatedAt = Number(restored.updatedAt || 1);
+            return restored;
+          }
+        } catch (_err) {
+          // Fallback to default state if localStorage is blocked on opaque origin
+        }
+      }
+      const initial = createDefaultState(edition);
+      lastUpdatedAt = initial.updatedAt;
+      return initial;
+    }
+
+    function publishState(nextState) {
+      const sanitized = sanitizeStateForEdition(nextState, edition);
+      lastUpdatedAt = Math.max(lastUpdatedAt, Number(sanitized.updatedAt || 1));
+      const envelope = {
+        senderId: instanceId,
+        sentAt: Date.now(),
+        state: sanitized,
+      };
+      if (storage) {
+        try {
+          storage.setItem(storageKey, JSON.stringify(envelope));
+        } catch (_err) {
+          // Ignore quota or file:// restrictions
+        }
+      }
+      if (channel) {
+        try {
+          channel.postMessage(envelope);
+        } catch (_err) {
+          // Ignore closed channel
+        }
+      }
+      return sanitized;
+    }
+
+    function destroy() {
+      if (win && typeof win.removeEventListener === "function") {
+        win.removeEventListener("storage", handleStorageEvent);
+      }
+      if (channel && typeof channel.close === "function") {
+        channel.close();
+      }
+    }
+
+    return {
+      instanceId,
+      loadInitialState,
+      publishState,
+      destroy,
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // Gentle WebAudio API Synthesizer Chime (Zero External Audio Dependencies)
+  // -------------------------------------------------------------------------
+  let _audioCtx = null;
+  function playWebAudioChime(presetId = "crystal_bell", volume = 0.65, muted = false) {
+    if (muted || volume <= 0) return false;
+    if (typeof window === "undefined") return false;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return false;
+
+    try {
+      if (!_audioCtx) {
+        _audioCtx = new AudioCtx();
+      }
+      if (_audioCtx.state === "suspended") {
+        _audioCtx.resume();
+      }
+
+      const now = _audioCtx.currentTime;
+      const master = _audioCtx.createGain();
+      master.gain.setValueAtTime(Math.min(1, Math.max(0, volume)) * 0.35, now);
+      master.connect(_audioCtx.destination);
+
+      if (presetId === "retro_8bit") {
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((freq, idx) => {
+          const osc = _audioCtx.createOscillator();
+          const gain = _audioCtx.createGain();
+          osc.type = "square";
+          osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+          gain.gain.setValueAtTime(0.001, now + idx * 0.09);
+          gain.gain.linearRampToValueAtTime(0.45, now + idx * 0.09 + 0.015);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.22);
+          osc.connect(gain);
+          gain.connect(master);
+          osc.start(now + idx * 0.09);
+          osc.stop(now + idx * 0.09 + 0.24);
+        });
+      } else if (presetId === "lofi_rhodes") {
+        const chord = [261.63, 329.63, 392.0, 493.88, 587.33]; // Cmaj9
+        chord.forEach((freq, idx) => {
+          const osc = _audioCtx.createOscillator();
+          const gain = _audioCtx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+          gain.gain.setValueAtTime(0.001, now + idx * 0.04);
+          gain.gain.linearRampToValueAtTime(0.32, now + idx * 0.04 + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 1.35);
+          osc.connect(gain);
+          gain.connect(master);
+          osc.start(now + idx * 0.04);
+          osc.stop(now + idx * 0.04 + 1.4);
+        });
+      } else {
+        // Default: crystal_bell
+        const notes = [587.33, 880.0, 1174.66, 1479.98]; // D5 - A5 - D6 - F#6
+        notes.forEach((freq, idx) => {
+          const osc = _audioCtx.createOscillator();
+          const gain = _audioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freq, now + idx * 0.14);
+          gain.gain.setValueAtTime(0.001, now + idx * 0.14);
+          gain.gain.linearRampToValueAtTime(0.55, now + idx * 0.14 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.14 + 1.15);
+          osc.connect(gain);
+          gain.connect(master);
+          osc.start(now + idx * 0.14);
+          osc.stop(now + idx * 0.14 + 1.2);
+        });
+      }
+      return true;
+    } catch (_err) {
+      return false;
+    }
+  }
+
+  return {
+    BROADCAST_CHANNEL_NAME,
+    STORAGE_KEY,
+    SCHEMA_VERSION,
+    EDITIONS,
+    THEMES,
+    CHIME_PRESETS,
+    VALID_MODES,
+    VALID_POSITIONS,
+    getEditionRules,
+    createDefaultState,
+    sanitizeStateForEdition,
+    formatHms,
+    formatMmSs,
+    parseHmsInput,
+    getStreamElapsedSec,
+    startStreamTimer,
+    pauseStreamTimer,
+    resetStreamTimer,
+    adjustStreamOffset,
+    setStreamOffset,
+    generateYoutubeTimestampList,
+    parseSongLine,
+    parseBulkSetlistText,
+    addSong,
+    bulkImportSongs,
+    startSongById,
+    advanceToNextSong,
+    rewindToPreviousSong,
+    removeSong,
+    moveSong,
+    updateSongTimestamp,
+    resetSetlistProgress,
+    getSetlistSummary,
+    getPhaseDurationSeconds,
+    getPomodoroRemainingSec,
+    startPomodoro,
+    pausePomodoro,
+    resetPomodoroPhase,
+    resetPomodoroAll,
+    transitionPomodoroPhase,
+    tickPomodoro,
+    configurePomodoro,
+    addTodo,
+    toggleTodo,
+    removeTodo,
+    setActiveMode,
+    setOverlayPosition,
+    setTheme,
+    setCustomThemeOptions,
+    updateClockConfig,
+    updateSetlistOptions,
+    resolveEffectiveTheme,
+    exportPresetJson,
+    importPresetJson,
+    createSyncBridge,
+    playWebAudioChime,
+  };
+})();
+
+if (typeof window !== "undefined") {
+  window.PecoObsEngine = PecoObsEngine;
+}
+    
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function formatClockParts(now, use24Hour, showSeconds) {
+  let hours = now.getHours();
+  let ampm = "";
+  if (!use24Hour) {
+    ampm = hours >= 12 ? " PM" : " AM";
+    hours = hours % 12 || 12;
+  }
+  const hh = String(hours).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const ss = String(now.getSeconds()).padStart(2, "0");
+  const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  const jpDays = ["日", "月", "火", "水", "木", "金", "土"];
+  const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(
+    now.getDate()
+  ).padStart(2, "0")} (${jpDays[now.getDay()]}) ${days[now.getDay()]}`;
+  return {
+    hm: `${hh}:${mm}`,
+    sec: showSeconds ? `:${ss}` : "",
+    ampm,
+    dateStr,
+  };
+}
+
+function applyThemeCssVariables(targetEl, state) {
+  const t = window.PecoObsEngine.resolveEffectiveTheme(state);
+  targetEl.style.setProperty("--ov-bg-rgb", t.bgRgb);
+  targetEl.style.setProperty("--ov-bg-alt-rgb", t.bgAltRgb);
+  targetEl.style.setProperty("--ov-opacity", String(t.opacity));
+  targetEl.style.setProperty("--ov-border", t.borderColor);
+  targetEl.style.setProperty("--ov-text", t.textPrimary);
+  targetEl.style.setProperty("--ov-text-sec", t.textSecondary);
+  targetEl.style.setProperty("--ov-muted", t.textMuted);
+  targetEl.style.setProperty("--ov-accent", t.accent);
+  targetEl.style.setProperty("--ov-accent2", t.accent2);
+  targetEl.style.setProperty("--ov-badge-text", t.badgeText);
+  targetEl.style.setProperty("--ov-radius", `${t.radiusPx}px`);
+  targetEl.dataset.themeId = t.id;
+  targetEl.dataset.pixel = t.pixelBorder ? "1" : "0";
+  targetEl.dataset.light = t.isLight ? "1" : "0";
+}
+
+function renderUtawakuCardHtml(state, compactMode) {
+  const Engine = window.PecoObsEngine;
+  const summary = Engine.getSetlistSummary(state);
+  const offsetSec = Number((state.streamTimer && state.streamTimer.offsetSec) || 0);
+  const current = summary.currentSong;
+  const next = summary.nextSong;
+  const songs = (state.setlist && state.setlist.songs) || [];
+
+  const eqBars = `
+    <span class="ov-eq" aria-hidden="true">
+      <i></i><i></i><i></i><i></i><i></i>
+    </span>
+  `;
+
+  const currentHtml = current
+    ? `
+      <div class="ov-now-box">
+        <div class="ov-now-label-row">
+          <span class="ov-pill-accent">${eqBars}<span>♪ NOW SINGING</span></span>
+          <span class="ov-song-num">#${String(current.number).padStart(2, "0")} / ${String(
+        summary.totalCount
+      ).padStart(2, "0")}</span>
+        </div>
+        <div class="ov-now-title">${escapeHtml(current.title)}</div>
+        ${
+          current.artist
+            ? `<div class="ov-now-artist">${escapeHtml(current.artist)}</div>`
+            : `<div class="ov-now-artist">Sing-Along Live</div>`
+        }
+      </div>
+    `
+    : `
+      <div class="ov-now-box">
+        <div class="ov-now-label-row">
+          <span class="ov-pill-accent">♪ STANDBY</span>
+          <span class="ov-song-num">${summary.sungSongs.length} / ${summary.totalCount} SUNG</span>
+        </div>
+        <div class="ov-now-title">リクエスト＆次の曲準備中♪</div>
+        <div class="ov-now-artist">${escapeHtml(state.setlist.streamTitle)}</div>
+      </div>
+    `;
+
+  const nextHtml = next
+    ? `
+      <div class="ov-next-row">
+        <span class="ov-next-tag">NEXT UP ▸</span>
+        <span class="ov-next-song">#${String(next.number).padStart(2, "0")} ${escapeHtml(
+        next.title
+      )}${next.artist ? ` <small>/ ${escapeHtml(next.artist)}</small>` : ""}</span>
+      </div>
+    `
+    : "";
+
+  if (compactMode) {
+    return `
+      <div class="ov-card ov-card-compact">
+        ${currentHtml}
+        ${nextHtml}
+      </div>
+    `;
+  }
+
+  let listItemsHtml = "";
+  if (state.setlist.showSungHistory && songs.length > 0) {
+    listItemsHtml = songs
+      .map((s, idx) => {
+        const num = String(idx + 1).padStart(2, "0");
+        const isSung = s.status === "sung";
+        const isCur = s.status === "current";
+        const mark = isSung ? "✓" : isCur ? "▶" : "•";
+        const tsBadge =
+          state.edition === "pro" && s.startedAtSec !== null && s.startedAtSec !== undefined
+            ? `<span class="ov-row-ts">${Engine.formatHms(Math.max(0, s.startedAtSec + offsetSec))}</span>`
+            : "";
+        return `
+          <div class="ov-song-row status-${escapeHtml(s.status)}">
+            <span class="ov-row-mark">${mark}</span>
+            <span class="ov-row-idx">${num}</span>
+            <span class="ov-row-main">
+              <span class="ov-row-title">${escapeHtml(s.title)}</span>
+              ${s.artist ? `<span class="ov-row-artist">/ ${escapeHtml(s.artist)}</span>` : ""}
+            </span>
+            ${tsBadge}
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  return `
+    <div class="ov-card ov-utawaku-card">
+      <div class="ov-card-header">
+        <span class="ov-header-title">${escapeHtml(state.setlist.streamTitle)}</span>
+        <span class="ov-header-count">${summary.sungSongs.length}/${summary.totalCount} SUNG</span>
+      </div>
+      ${currentHtml}
+      ${nextHtml}
+      ${
+        listItemsHtml
+          ? `<div class="ov-section-caption">SETLIST / SUNG LOG</div><div class="ov-song-list">${listItemsHtml}</div>`
+          : ""
+      }
+    </div>
+  `;
+}
+
+function renderPomodoroCardHtml(state, nowMs, compactMode) {
+  const Engine = window.PecoObsEngine;
+  const pomo = state.pomodoro;
+  const remSec = Engine.getPomodoroRemainingSec(state, nowMs);
+  const totalSec = Engine.getPhaseDurationSeconds(pomo, pomo.phase);
+  const ratio = totalSec > 0 ? Math.min(1, Math.max(0, remSec / totalSec)) : 0;
+  const radius = 58;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference * (1 - ratio);
+
+  const phaseMeta =
+    pomo.phase === "break"
+      ? { badge: "☕ BREAK TIME", sub: "小休憩・お茶タイム" }
+      : pomo.phase === "long_break"
+      ? { badge: "🌙 LONG BREAK", sub: "リフレッシュ長休憩" }
+      : { badge: "🔥 FOCUS WORK", sub: "作業・勉強集中タイム" };
+
+  const todos = pomo.todos || [];
+  const doneCount = todos.filter((t) => t.done).length;
+
+  const ringSvg = `
+    <div class="ov-pomo-ring-wrap">
+      <svg class="ov-pomo-ring" viewBox="0 0 140 140" aria-hidden="true">
+        <circle class="ov-ring-track" cx="70" cy="70" r="${radius}" />
+        <circle
+          class="ov-ring-fill"
+          cx="70"
+          cy="70"
+          r="${radius}"
+          stroke-dasharray="${circumference.toFixed(2)}"
+          stroke-dashoffset="${dashOffset.toFixed(2)}"
+        />
+      </svg>
+      <div class="ov-ring-center">
+        <div class="ov-pomo-time">${Engine.formatMmSs(remSec)}</div>
+        <div class="ov-pomo-state">${pomo.isRunning ? "RUNNING" : "PAUSED"}</div>
+      </div>
+    </div>
+  `;
+
+  if (compactMode) {
+    return `
+      <div class="ov-card ov-card-compact ov-pomo-compact">
+        ${ringSvg}
+        <div class="ov-pomo-compact-info">
+          <span class="ov-pill-accent">${phaseMeta.badge}</span>
+          <div class="ov-pomo-set">SET ${pomo.currentSet} / ${pomo.cyclesBeforeLongBreak} · DONE ${pomo.completedSetsToday}</div>
+          <div class="ov-pomo-sub">${phaseMeta.sub}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const todoHtml =
+    todos.length > 0
+      ? `
+        <div class="ov-section-caption">TASK LIST (${doneCount}/${todos.length})</div>
+        <div class="ov-todo-list">
+          ${todos
+            .map(
+              (t) => `
+            <div class="ov-todo-row ${t.done ? "is-done" : ""}">
+              <span class="ov-todo-check">${t.done ? "✓" : "□"}</span>
+              <span class="ov-todo-text">${escapeHtml(t.text)}</span>
+            </div>
+          `
+            )
+            .join("")}
+        </div>
+      `
+      : "";
+
+  return `
+    <div class="ov-card ov-pomo-card">
+      <div class="ov-card-header">
+        <span class="ov-pill-accent">${phaseMeta.badge}</span>
+        <span class="ov-header-count">SET ${pomo.currentSet} / ${pomo.cyclesBeforeLongBreak}</span>
+      </div>
+      <div class="ov-pomo-hero">
+        ${ringSvg}
+        <div class="ov-pomo-meta">
+          <div class="ov-pomo-sub">${phaseMeta.sub}</div>
+          <div class="ov-pomo-stat-line">完了セット: <strong>${pomo.completedSetsToday}</strong></div>
+          <div class="ov-pomo-stat-line">配分: <strong>${pomo.workMinutes}m / ${pomo.breakMinutes}m</strong></div>
+        </div>
+      </div>
+      ${todoHtml}
+    </div>
+  `;
+}
+
+function renderClockBoardHtml(state, nowDate, isMiniCorner) {
+  const parts = formatClockParts(
+    nowDate,
+    Boolean(state.clock && state.clock.use24Hour),
+    Boolean(state.clock && state.clock.showSeconds)
+  );
+  const hashtag = (state.clock && state.clock.hashtag) || "";
+  const marquee = (state.clock && state.clock.marqueeText) || "";
+
+  if (isMiniCorner) {
+    return `
+      <div class="ov-card ov-mini-clock">
+        <div class="ov-mini-clock-top">
+          <span class="ov-mini-time">${parts.hm}<small>${parts.sec}${parts.ampm}</small></span>
+          ${hashtag ? `<span class="ov-mini-tag">${escapeHtml(hashtag)}</span>` : ""}
+        </div>
+        <div class="ov-mini-date">${escapeHtml(parts.dateStr)}</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="ov-card ov-clock-card">
+      <div class="ov-clock-top-row">
+        <div>
+          <div class="ov-clock-date">${escapeHtml(parts.dateStr)}</div>
+          <div class="ov-clock-time">${parts.hm}<span class="ov-clock-sec">${parts.sec}${parts.ampm}</span></div>
+        </div>
+        ${hashtag ? `<div class="ov-clock-tag-pill">${escapeHtml(hashtag)}</div>` : ""}
+      </div>
+      ${
+        marquee
+          ? `
+        <div class="ov-marquee-Viewport">
+          <div class="ov-marquee-track">
+            <span>${escapeHtml(marquee)}</span>
+            <span aria-hidden="true">${escapeHtml(marquee)}</span>
+          </div>
+        </div>
+      `
+          : ""
+      }
+    </div>
+  `;
+}
+
+function renderFullOverlaySceneHtml(state, nowMs) {
+  const nowDate = new Date(nowMs);
+  const compact = state.overlayPosition === "compact";
+  const mode = state.activeMode;
+
+  let mainHtml = "";
+  let cornerClockHtml = "";
+
+  if (mode === "clock") {
+    mainHtml = renderClockBoardHtml(state, nowDate, false);
+  } else if (mode === "pomodoro") {
+    mainHtml = renderPomodoroCardHtml(state, nowMs, compact);
+    if (state.showMiniClockInCorner) {
+      cornerClockHtml = renderClockBoardHtml(state, nowDate, true);
+    }
+  } else if (mode === "all_in_one") {
+    const topClock = renderClockBoardHtml(state, nowDate, false);
+    const primaryCard =
+      state.allInOnePrimary === "pomodoro"
+        ? renderPomodoroCardHtml(state, nowMs, compact)
+        : renderUtawakuCardHtml(state, compact);
+    mainHtml = `<div class="ov-stack">${topClock}${primaryCard}</div>`;
+  } else {
+    mainHtml = renderUtawakuCardHtml(state, compact);
+    if (state.showMiniClockInCorner) {
+      cornerClockHtml = renderClockBoardHtml(state, nowDate, true);
+    }
+  }
+
+  return { mainHtml, cornerClockHtml };
+}
+
+
+    (function initShowcaseDemo() {
+      const Engine = window.PecoObsEngine;
+      const overlayRoot = document.getElementById("demoOverlayRoot");
+      const mainSlot = document.getElementById("demoMainSlot");
+      const cornerSlot = document.getElementById("demoCornerSlot");
+      const tsSlip = document.getElementById("demoTsSlip");
+      const toast = document.getElementById("demoToast");
+      const monitor = document.getElementById("demoMonitor");
+
+      // Interactive stage runs in Pro preview mode in-page so visitors can test all 6 themes & timestamps!
+      let demoState = Engine.createDefaultState("pro");
+      demoState = Engine.startStreamTimer(demoState, Date.now());
+
+      function flash(msg) {
+        toast.textContent = msg;
+        clearTimeout(flash._t);
+        flash._t = setTimeout(() => { toast.textContent = ""; }, 2600);
+      }
+
+      function renderDemo(nowMs) {
+        applyThemeCssVariables(overlayRoot, demoState);
+        const scene = renderFullOverlaySceneHtml(demoState, nowMs);
+        mainSlot.innerHTML = scene.mainHtml;
+        cornerSlot.innerHTML = scene.cornerClockHtml;
+        tsSlip.textContent = Engine.generateYoutubeTimestampList(demoState);
+
+        document.querySelectorAll(".demo-mode-btn").forEach((b) => {
+          b.classList.toggle("is-active", b.dataset.mode === demoState.activeMode);
+        });
+        document.querySelectorAll(".demo-theme-btn").forEach((b) => {
+          b.classList.toggle("is-active", b.dataset.theme === demoState.theme.themeId);
+        });
+      }
+
+      const themeGrid = document.getElementById("demoThemeBtns");
+      Object.values(Engine.THEMES).forEach((t) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "ctrl-btn demo-theme-btn";
+        btn.dataset.theme = t.id;
+        btn.textContent = `${t.name} (${t.jpName})`;
+        btn.addEventListener("click", () => {
+          demoState = Engine.setTheme(demoState, t.id, "pro").state;
+          renderDemo(Date.now());
+        });
+        themeGrid.appendChild(btn);
+      });
+
+      document.querySelectorAll(".demo-mode-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const m = btn.dataset.mode;
+          const prim = m === "pomodoro" ? "pomodoro" : m === "utawaku" ? "utawaku" : demoState.allInOnePrimary;
+          demoState = Engine.setActiveMode(demoState, m, prim);
+          renderDemo(Date.now());
+        });
+      });
+
+      document.getElementById("demoNextSongBtn").addEventListener("click", () => {
+        // Advance simulated clock by +225 sec on demo click if Songs 2+ have null timestamps so timestamp list looks awesome!
+        const virtualNow = Date.now() + demoState.setlist.songs.filter((s) => s.status === "sung").length * 242000;
+        demoState = Engine.advanceToNextSong(demoState, virtualNow);
+        flash("次の曲を開始＆タイムスタンプを記録しました！");
+        renderDemo(Date.now());
+      });
+
+      document.getElementById("demoPrevSongBtn").addEventListener("click", () => {
+        demoState = Engine.rewindToPreviousSong(demoState);
+        renderDemo(Date.now());
+      });
+
+      document.getElementById("demoPomoToggleBtn").addEventListener("click", () => {
+        demoState = Engine.setActiveMode(demoState, "pomodoro", "pomodoro");
+        demoState = demoState.pomodoro.isRunning
+          ? Engine.pausePomodoro(demoState, Date.now())
+          : Engine.startPomodoro(demoState, Date.now());
+        renderDemo(Date.now());
+      });
+
+      document.getElementById("demoChimeBtn").addEventListener("click", () => {
+        const preset = demoState.theme.themeId === "pixel_retro" ? "retro_8bit" : "crystal_bell";
+        Engine.playWebAudioChime(preset, 0.7, false);
+        flash("WebAudioチャイムを再生しました♪");
+      });
+
+      document.getElementById("demoCopyTsBtn").addEventListener("click", async () => {
+        const text = Engine.generateYoutubeTimestampList(demoState);
+        try {
+          await navigator.clipboard.writeText(text);
+          flash("タイムスタンプをコピーしました！");
+        } catch (_e) {
+          flash("コピー完了！");
+        }
+      });
+
+      document.querySelectorAll(".stage-bg-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".stage-bg-btn").forEach((b) => b.classList.remove("is-active"));
+          btn.classList.add("is-active");
+          monitor.classList.remove("bg-checker", "bg-daylight");
+          if (btn.dataset.bg === "checker") monitor.classList.add("bg-checker");
+          if (btn.dataset.bg === "daylight") monitor.classList.add("bg-daylight");
+        });
+      });
+
+      document.querySelectorAll(".copy-url-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const input = document.getElementById(btn.dataset.target);
+          try {
+            await navigator.clipboard.writeText(input.value);
+            const orig = btn.textContent;
+            btn.textContent = "コピー完了！";
+            setTimeout(() => { btn.textContent = orig; }, 1800);
+          } catch (_e) {
+            input.select();
+            document.execCommand("copy");
+          }
+        });
+      });
+
+      setInterval(() => renderDemo(Date.now()), 1000);
+      renderDemo(Date.now());
+    })();
+  </script>
+</body>
+</html>
