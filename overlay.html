@@ -697,7 +697,86 @@
   </aside>
 
   <script>
-    const EDITION = "lite";
+    
+const _pecoParams = new URLSearchParams(window.location.search);
+function resolvePecoEdition(buildDefault) {
+  if (buildDefault === "pro") return "pro";
+  if (_pecoParams.get("pro") === "1" || _pecoParams.get("key") === "utawaku-pro-global") return "pro";
+  return "lite";
+}
+function resolvePecoLang() {
+  const q = (_pecoParams.get("lang") || localStorage.getItem("peco_obs_ui_lang") || "").toLowerCase();
+  if (q.startsWith("en")) return "en";
+  if (q.startsWith("ja")) return "ja";
+  return ((navigator.language || "").toLowerCase().startsWith("ja")) ? "ja" : "en";
+}
+function applyDockI18nAndEdition(edition, lang) {
+  document.documentElement.lang = lang;
+  const upsell = document.querySelector(".upsell-strip");
+  const pill = document.querySelector(".dock-header .edition-pill");
+  if (edition === "pro") {
+    if (upsell) upsell.style.display = "none";
+    if (pill) pill.textContent = "PRO EDITION";
+  } else if (upsell && lang === "en") {
+    upsell.innerHTML = '<span>✨ <strong>Pro Pack ($12 USD)</strong> unlocks all 6 themes, unlimited setlist &amp; auto YouTube chapters</span><a href="https://pecopeko.gumroad.com/l/tokyo-utawaku-obs-dock" target="_blank" rel="noopener noreferrer" class="upsell-link">Gumroad ($12) ↗</a>';
+  }
+  if (lang !== "en") return;
+  document.title = "OBS Custom Dock — Utawaku Setlist & Pomodoro Control | peco";
+  const textMap = {
+    "歌枠＆ポモドーロ操作ドック": "Utawaku & Pomodoro OBS Dock",
+    "📺 オーバーレイ表示モード": "📺 Overlay Scene Mode",
+    "🎤 歌枠": "🎤 Singing",
+    "⏱ ポモドーロ": "⏱ Pomodoro",
+    "🕒 時計・タグ": "🕒 Clock/Tag",
+    "✨ 同時表示": "✨ Combo",
+    "⬅ 左寄せ配置": "⬅ Left Align",
+    "➡ 右寄せ配置": "➡ Right Align",
+    "▬ 下部ワイド": "▬ Lower Third",
+    "🎤 セトリ": "🎤 Setlist",
+    "🎨 テーマ": "🎨 Themes",
+    "▶ 次の曲へ進む（この曲を開始）": "▶ Start Next Song (+ Log Timestamp)",
+    "⏮ 前の曲へ戻す": "⏮ Previous Song",
+    "↺ 未歌唱に戻す": "↺ Reset Progress",
+    "⏱ 配信経過＆YouTubeタイムスタンプ自動記録": "⏱ Stream Elapsed & Auto YouTube Chapters",
+    "PRO機能": edition === "pro" ? "PRO ACTIVE" : "PRO FEATURE",
+    "🔴 配信計測スタート": "🔴 Start Stream Timer",
+    "0リセット": "Reset 0:00",
+    "📋 YouTube概要欄・コメント用タイムスタンプをコピー": "📋 Copy YouTube Chapters to Clipboard",
+    "⬇ JSON保存": "⬇ Export JSON",
+    "🎛 OBS対話ミニ操作 (LITE)": edition === "pro" ? "🎛 OBS Mini Control (PRO)" : "🎛 OBS Mini Control (LITE)",
+    "🎛 OBS対話ミニ操作 (PRO)": "🎛 OBS Mini Control (PRO)",
+    "× 隠す": "× Hide",
+    "⏮ 前曲": "⏮ Prev",
+    "▶ 次の曲へ (開始)": "▶ Next Song",
+    "⏱ 開始/停止": "⏱ Start/Pause",
+    "⚙ 曲追加・テーマ": "⚙ Add Song / Theme",
+    "＋ セトリに追加": "＋ Add to Setlist",
+    "📋 タイムスタンプCopy": "📋 Copy Chapters",
+    "マウスを離すと約2.5秒で自動的に透明化します（配信画面には映りません）。": "Auto-hides 2.5s after mouse leaves (invisible on stream)."
+  };
+  document.querySelectorAll("span, button, summary, label, div.ib-note").forEach((el) => {
+    if (el.children.length === 0) {
+      const t = el.textContent.trim();
+      if (textMap[t]) el.textContent = textMap[t];
+      else if (edition === "pro" && t.includes("🔒Pro")) el.textContent = t.replace("🔒Pro", "").trim();
+    }
+  });
+  const phMap = {
+    "ibSongTitle": "Song Title (e.g. Idol)",
+    "ibSongArtist": "Artist (e.g. YOASOBI)",
+    "inputSongTitle": "Song Title (e.g. Idol)",
+    "inputSongArtist": "Artist (e.g. YOASOBI)",
+    "inputSongNote": "Key / Request Note (optional)",
+    "inputTodoText": "Add task for Pomodoro stream..."
+  };
+  Object.keys(phMap).forEach((id) => {
+    const inp = document.getElementById(id);
+    if (inp) inp.placeholder = phMap[id];
+  });
+}
+
+    const EDITION = resolvePecoEdition("lite");
+    const UI_LANG = resolvePecoLang();
     /**
  * OBS Utawaku Setlist, YouTube Timestamp & Pomodoro All-in-One Engine
  * Crafted by peco (https://pecopeko1011.booth.pm/)
@@ -2604,6 +2683,7 @@ function renderFullOverlaySceneHtml(state, nowMs) {
 
 
     (function initOverlayApp() {
+      applyDockI18nAndEdition(EDITION, UI_LANG);
       const Engine = window.PecoObsEngine;
       const rootEl = document.getElementById("obsRoot");
       const canvasEl = document.getElementById("obsCanvas");
